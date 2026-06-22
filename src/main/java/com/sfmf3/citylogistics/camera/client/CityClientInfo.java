@@ -5,6 +5,8 @@ import com.sfmf3.citylogistics.CityLogistics;
 import com.sfmf3.citylogistics.building.BuildingState;
 import com.sfmf3.citylogistics.city.CityManager;
 import com.sfmf3.citylogistics.network.payload.CityRequestPayload;
+import com.sfmf3.citylogistics.network.payload.CityResponsePayload;
+import dev.ftb.mods.ftblibrary.client.gui.widget.ScreenWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
@@ -31,11 +33,6 @@ public class CityClientInfo {
     public static int pop;
     public static int popcap;
 
-    public static BlockPos selectedBlock = null;
-    public static String selectedBuildingId = "";
-    public static String selectedPath = "";
-    public static Rotation selectedRotation = Rotation.NONE;
-    public static boolean isMirrored = false;
 
     public static List<BuildingBox> allBuildings = new ArrayList<>();
 
@@ -63,29 +60,20 @@ public class CityClientInfo {
     // runs when CityBuilderScreen is initialized
     public static void getInformation(){
         mc.player.connection.send(new CityRequestPayload(mc.player.blockPosition()));
-
     }
 
-    public static void resetAll(){
-        cityAnchor = null;
-        resetBlock();
-        resetPlacements();
-        selectedBuildingId = "";
+    public static void setCityInfo(CityResponsePayload payload){
+        cityAnchor = payload.cityAnchor();
+        pop = payload.pop();
+        popcap = payload.popcap();
+        stockCurrent = payload.stockCurrent();
+        stockLimits = payload.stockLimits();
+        allBuildings = payload.buildings();
+
+        if(mc.screen instanceof ScreenWrapper wrapper){
+            if(wrapper.getGui() instanceof CityBuilderScreen screen){
+                screen.refreshWidgets();
+            }
+        }
     }
-
-    public static void resetPlacements(){
-        selectedPath = "";
-        selectedRotation = Rotation.NONE;
-        isMirrored = false;
-    }
-
-    public static void resetBlock(){
-        selectedBlock = null;
-    }
-
-    public static void resetPath(){
-        selectedPath = null;
-    }
-
-
 }

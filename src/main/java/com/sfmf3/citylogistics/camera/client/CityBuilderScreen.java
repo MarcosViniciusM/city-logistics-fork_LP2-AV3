@@ -43,6 +43,12 @@ public class CityBuilderScreen extends BaseScreen {
     private String activeCategory = "";
     private String selectedBuildingId = "";
 
+    private BlockPos selectedBlock = null;
+    private String selectedPath = "";
+    private Rotation selectedRotation = Rotation.NONE;
+    private boolean isMirrored = false;
+
+
     public record BuildingDefinition(String buildingId, String displayName, String category){}
     private static final List<BuildingDefinition> BUILDING_REGISTRY = List.of(
             new BuildingDefinition("mine", "Stone Quarry", "Extractors"),
@@ -98,6 +104,11 @@ public class CityBuilderScreen extends BaseScreen {
                         + selectedBlock.getZ() + "!"
                 ));
             }
+
+            // if the blueprint menu is open, show blueprint
+            if(selectedBlock != null && selectedPath != null){
+                updatePreviewState();
+            }
         }
 
         if(CameraController.isAnchorActive() && button.isRight()) {
@@ -149,11 +160,28 @@ public class CityBuilderScreen extends BaseScreen {
             return true;
         }
 
+
         return super.keyPressed(event);
+    }
+
+    @Override
+    public void onClosed(){
+        super.onClosed();
+        BlueprintPreview.clear();
     }
 
     private boolean keybindPressed(KeyMapping binding, Key event){
         return event.event().input() == binding.getKey().getValue();
+    }
+
+    private void updatePreviewState() {
+        BlueprintPreview.update(
+                this.selectedBlock,
+                this.selectedBuildingId,
+                this.selectedPath,
+                this.selectedRotation,
+                this.isMirrored
+        );
     }
 
     // removes ugly background

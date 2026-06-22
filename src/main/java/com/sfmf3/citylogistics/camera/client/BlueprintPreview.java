@@ -37,18 +37,37 @@ import static com.sfmf3.citylogistics.camera.CameraController.mc;
 @EventBusSubscriber(modid = CityLogistics.MODID, value = Dist.CLIENT)
 public class BlueprintPreview {
 
+    public static BlockPos selectedBlock = null;
+    public static String selectedBuildingId = "";
+    public static String selectedPath = "";
+    public static Rotation selectedRotation = Rotation.NONE;
+    public static boolean isMirrored = false;
+
+    public static void update(BlockPos pos, String id, String path, Rotation rot, boolean mirror) {
+        selectedBlock = pos;
+        selectedBuildingId = id;
+        selectedPath = path;
+        selectedRotation = rot;
+        isMirrored = mirror;
+    }
+
+    public static void clear() {
+        selectedBlock = null;
+        selectedPath = "";
+    }
+
     @SubscribeEvent
     public static void onRenderLevelStage(RenderLevelStageEvent.AfterTranslucentBlocks event) {
-        BlockPos targetPos = CityClientInfo.selectedBlock;
-        String blueprintPath = CityClientInfo.selectedPath;
+        BlockPos targetPos = selectedBlock;
+        String blueprintPath = selectedPath;
         if (targetPos == null || blueprintPath == null || blueprintPath.isEmpty()) return;
 
         if (mc.level == null || mc.player == null) return;
 
-        Blueprint blueprint = BlueprintIO.loadFromFile((CityClientInfo.selectedBuildingId + "/" + CityClientInfo.selectedPath), mc.level);
+        Blueprint blueprint = BlueprintIO.loadFromFile((selectedBuildingId + "/" + selectedPath), mc.level);
         if (blueprint == null) return;
 
-        BlockPos centerOffset = CityManager.getCenterBlock(targetPos, blueprint.getDimensions(), CityClientInfo.selectedRotation, CityClientInfo.isMirrored);
+        BlockPos centerOffset = CityManager.getCenterBlock(targetPos, blueprint.getDimensions(), selectedRotation, isMirrored);
 
         PoseStack poseStack = event.getPoseStack();
         VertexConsumer buffer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderTypes.lines());
@@ -57,26 +76,20 @@ public class BlueprintPreview {
 
         poseStack.pushPose();
 
-        // 2. Translate to the target world block, relative to the camera
         poseStack.translate(
                 targetPos.getX() - camPos.x,
                 targetPos.getY() - camPos.y,
                 targetPos.getZ() - camPos.z
         );
-
-        // 3. Shift to the center of the target block to act as a perfect pivot point
         poseStack.translate(0.5, 0.5, 0.5);
 
-        // 4. Apply Rotation (Y-Axis)
-        float rotDegrees = getRotationDegrees(CityClientInfo.selectedRotation);
+        float rotDegrees = getRotationDegrees(selectedRotation);
         poseStack.mulPose(Axis.YP.rotationDegrees(rotDegrees));
 
-        // 5. Apply Mirror (Scale -1 on the X-axis flips it)
-        if (CityClientInfo.isMirrored) {
+        if (isMirrored) {
             poseStack.scale(-1.0f, 1.0f, 1.0f);
         }
 
-        // 6. Translate backwards by the blueprint's center offset and remove the 0.5 pivot offset
         poseStack.translate(
                 -0.5 - centerOffset.getX(),
                 -0.5 - centerOffset.getY(),
@@ -103,11 +116,8 @@ public class BlueprintPreview {
             if(state.isSolidRender()){
                 ShapeRenderer.renderShape(poseStack, buffer, cube, localPos.getX(), localPos.getY(), localPos.getZ(), 0xFFFF0000, 1.0f);
             }
-
-            poseStack.popPose();
         }
 
-        // Force the buffer to draw immediately
         poseStack.popPose();
     }
 
