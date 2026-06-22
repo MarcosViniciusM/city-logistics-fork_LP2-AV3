@@ -103,7 +103,7 @@ public class CityBuilderScreen extends BaseScreen {
                         + selectedBlock.getY() + ", "
                         + selectedBlock.getZ() + "!"
                 ));
-            }
+            } else{ selectedBlock = null; }
 
             // if the blueprint menu is open, show blueprint
             if(selectedBlock != null && selectedPath != null){
