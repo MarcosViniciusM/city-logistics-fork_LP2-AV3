@@ -225,6 +225,7 @@ public class CityManager {
         int safeCapacity = (int) (city.getPopulationCap() * 1.1);
         int popCount = city.getPopulation();
 
+        if(popCount <= 0) return;
         // if not enough housing
         if(popCount > safeCapacity){
             int unhoused = popCount - safeCapacity;
@@ -233,7 +234,7 @@ public class CityManager {
         }
         // if not enough food
         if(!tryConsumeResource(city, "food", (int)(popCount * 0.25))){
-            city.setPopulationCap(popCount - 2);
+            city.setPopulation(popCount - 2);
         }
     }
 

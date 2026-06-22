@@ -31,10 +31,10 @@ public class City {
     public City(String name, BlockPos anchor, List<UUID> editors, Map<String, Integer> stLim, Map<String, Integer> stCur, Map<BlockPos, AbstractBuilding> buildings, int population, int popCap){
         this.name = name;
         this.anchor = anchor;
-        this.editors = editors;
-        this.stockpileMax = stLim;
-        this.stockpileCurrent = stCur;
-        this.buildings = buildings;
+        this.editors = new ArrayList<>(editors);
+        this.stockpileMax = new HashMap<>(stLim);
+        this.stockpileCurrent = new HashMap<>(stCur);
+        this.buildings = new HashMap<>(buildings);
         this.population = population;
         this.populationCap = popCap;
     }
