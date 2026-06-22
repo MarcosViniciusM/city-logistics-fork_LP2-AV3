@@ -1,0 +1,309 @@
+package com.sfmf3.citylogistics.city;
+
+import com.sfmf3.citylogistics.blueprint.BlueprintIO;
+import com.sfmf3.citylogistics.building.AbstractBuilding;
+import com.sfmf3.citylogistics.building.BuildingRegistry;
+import com.sfmf3.citylogistics.building.BuildingState;
+import com.sfmf3.citylogistics.building.behavior.IExtraction;
+import com.sfmf3.citylogistics.building.behavior.IHousing;
+import com.sfmf3.citylogistics.building.behavior.IProduction;
+import com.sfmf3.citylogistics.network.CityOperationException;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.phys.AABB;
+
+import java.util.*;
+
+public class CityManager {
+
+    public static GlobalCitySavedData getCityData(ServerLevel level){
+        return level.getServer().overworld().getDataStorage().computeIfAbsent(GlobalCitySavedData.TYPE);
+    }
+
+    public static void tickAllCities(ServerLevel level){
+        GlobalCitySavedData data = getCityData(level);
+
+        for(City city : data.getCities().values()){
+            Collection<AbstractBuilding> allBuildings = city.getBuildings().values();
+
+            List<AbstractBuilding> extraction = new ArrayList<>();
+            List<AbstractBuilding> production = new ArrayList<>();
+            List<AbstractBuilding> unfinished = new ArrayList<>();
+
+            int totalHousingCapacity = 0;
+            int totalExtractionWorkers = 0;
+            int totalProductionWorkers = 0;
+
+            // separate buildings into lists
+            for(AbstractBuilding building : allBuildings){
+                if(building.getState() == BuildingState.OPERATIONAL){
+                    if(building instanceof IExtraction extractor){
+                        extraction.add(building);
+                        totalExtractionWorkers += extractor.getExtractionWorkerCapacity();
+                    }
+
+                    if(building instanceof IProduction productor){
+                        production.add(building);
+                        totalProductionWorkers += productor.getProductionWorkerCapacity();
+                    }
+
+                    if(building instanceof IHousing housing){
+                        totalHousingCapacity += housing.getHousingCapacity();
+                    }
+                } else if (building.getState() == BuildingState.UNFINISHED) {
+                    unfinished.add(building);
+                }
+            }
+            // quick update
+            if(city.getPopulationCap() != totalHousingCapacity){city.setPopulationCap(totalHousingCapacity);}
+
+            // lets civilians go if not enough housing or food
+            handleCivilianUpkeep(city);
+
+            // handles majority of resource calculations
+            int totalSlots = totalExtractionWorkers + totalProductionWorkers;
+            int activeWorkers = Math.min(city.getPopulation(), totalSlots);
+            if(totalSlots > 0 && activeWorkers > 0){
+                for(AbstractBuilding building : extraction){
+                    if(building instanceof IExtraction extractor){
+                        int capacity = extractor.getExtractionWorkerCapacity();
+                        int workers = (int) Math.round((double) activeWorkers * capacity / totalSlots);
+                        handleExtraction(city, extractor, workers);
+                    }
+                }
+            }
+            if(totalSlots > 0 && activeWorkers > 0){
+                for(AbstractBuilding building : production){
+                    if(building instanceof IProduction productor){
+                        int capacity = productor.getProductionWorkerCapacity();
+                        int workers = (int) Math.round((double) activeWorkers * capacity / totalSlots);
+                        handleProduction(city, productor, workers);
+                    }
+                }
+            }
+
+            for(AbstractBuilding building : unfinished){
+                AABB box = getBuildingBox(
+                        building.getOrigin(),
+                        building.getDimensions(),
+                        building.getRotation(),
+                        building.getMirrored());
+                BlockPos minPos = BlockPos.containing(box.minX, box.minY, box.minZ);
+                BlockPos maxPos = BlockPos.containing(box.maxX, box.maxY, box.maxZ);
+                if(!level.hasChunksAt(minPos, maxPos)) return;
+                building.tickConstruction(level, city);
+            }
+
+        }
+        data.setDirty();
+    }
+
+    public static void addCity(ServerLevel level, String name, BlockPos pos, UUID playerUUID){
+        GlobalCitySavedData data = getCityData(level);
+
+        for(BlockPos existingPos : data.getCities().keySet()){
+            if(pos.closerThan(existingPos, 150)){
+                throw new CityOperationException("City placement failed. Too close to existing cities!");
+            }
+        }
+        data.getCities().put(pos, new City(name, pos, playerUUID));
+        data.setDirty();
+    }
+
+    public static void removeCity(ServerLevel level, BlockPos pos, UUID playerUUID){
+        GlobalCitySavedData data = getCityData(level);
+        City city = data.getCities().get(pos);
+
+        if(city == null) { return; }
+
+        if(!city.getEditors().contains(playerUUID)){ return; }
+
+        data.getCities().remove(pos);
+        data.setDirty();
+    }
+
+    public static void addBuilding(ServerLevel level, City city, BlockPos origin, String path, Rotation rot, boolean mirrored, String buildingId){
+        BuildingRegistry.BuildingType<?> type = BuildingRegistry.BUILDINGS.get(buildingId);
+        if(type == null) { throw new CityOperationException("Unknown building type? " + buildingId); }
+
+        Vec3i dimensions = BlueprintIO.getDimensions(path);
+        BlockPos center = getCenterBlock(origin, dimensions, rot, mirrored);
+        AABB boundingBox = getBuildingBox(origin, dimensions, rot, mirrored);
+
+        for(BlockPos pos : city.getBuildings().keySet()){
+            if(pos.closerThan(center, 50)){
+
+                AbstractBuilding existing = city.getBuildings().get(pos);
+                AABB existingBox = getBuildingBox(pos, existing.getDimensions(), existing.getRotation(), existing.getMirrored());
+                if(boundingBox.intersects(existingBox)) throw new CityOperationException("Building intersects with another building!");
+            }
+        }
+
+        // if no building intersects, run as normal
+        AbstractBuilding building = type.factory().apply(level, origin, dimensions, path, rot, mirrored);
+        city.getBuildings().put(origin, building);
+
+    }
+
+    public static void removeBuilding(City city, BlockPos pos){
+        city.getBuildings().remove(pos);
+    }
+
+    public static void removeBuilding(City city, AbstractBuilding building){
+        if(building != null){
+            city.getBuildings().remove(building.getOrigin());
+        }
+    }
+
+    public static boolean tryConsumeResource(City city, String resource, int amount){
+        Map<String, Integer> cityStockpile = city.getStockpileCurrent();
+        int currentAmount = cityStockpile.getOrDefault(resource, 0);
+        if (currentAmount >= amount){
+            cityStockpile.put(resource, currentAmount - amount);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean tryConsumeResource(City city, Map<String, Integer> requirements){
+        Map<String, Integer> cityStockpile = city.getStockpileCurrent();
+        for(Map.Entry<String, Integer> entry : requirements.entrySet()) {
+            if(cityStockpile.getOrDefault(entry.getKey(), 0) < entry.getValue()){
+                return false;
+            }
+        }
+
+        for(Map.Entry<String, Integer> entry : requirements.entrySet()) {
+            cityStockpile.merge(entry.getKey(), -entry.getValue(), Integer::sum);
+        }
+
+        return true;
+    }
+
+    public static int tryAddResource(City city, String resource, int amount){
+        if (amount <= 0) return 0;
+
+        int current = city.getStockpileCurrent().getOrDefault(resource, 0);
+        int max = city.getStockpileMax().getOrDefault(resource, 0);
+        int availableSpace = max - current;
+
+        if(availableSpace <= 0) { return amount; }
+
+        if(amount <= availableSpace) { city.getStockpileCurrent().put(resource, current + amount); return 0; }
+
+        city.getStockpileCurrent().put(resource, max);
+        return amount - availableSpace;
+    }
+
+    public static void addPopulation(City city, int count){
+        int pop = city.getPopulation();
+        int requiredFood = (int) ((pop * pop) / ((pop * 4) + 1));
+
+        for(int x = 0; x < count; x++){
+            if(tryConsumeResource(city, "food", requiredFood)){city.setPopulation(city.getPopulation() + 1);}
+            else{ return; }
+        }
+    }
+
+    public static Map<String, Integer> tryAddResource(City city, Map<String, Integer> amount){
+        Map<String, Integer> leftovers = new HashMap<>();
+
+        for(Map.Entry<String, Integer> entry : amount.entrySet()) {
+            int leftover = tryAddResource(city, entry.getKey(), entry.getValue());
+            if (leftover > 0){
+                leftovers.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return leftovers;
+    }
+
+    public static void handleCivilianUpkeep(City city){
+        int safeCapacity = (int) (city.getPopulationCap() * 1.1);
+        int popCount = city.getPopulation();
+
+        // if not enough housing
+        if(popCount > safeCapacity){
+            int unhoused = popCount - safeCapacity;
+            int leaving = Math.max(1, unhoused/10);
+            city.setPopulation(popCount - leaving);
+        }
+        // if not enough food
+        if(!tryConsumeResource(city, "food", (int)(popCount * 0.25))){
+            city.setPopulationCap(popCount - 2);
+        }
+    }
+
+    public static void handleExtraction(City city, IExtraction extractor, int workers){
+        if(workers <= 0) return;
+
+        int amountProduced = (int) (workers * extractor.getExtractionWorkerRate());
+        tryAddResource(city, extractor.getExtractedResource(), amountProduced);
+    }
+
+    public static void handleProduction(City city, IProduction productor, int workers){
+        if (workers <= 0) return;
+
+        Map<String, Integer> requiredMaterials = new HashMap<>();
+        for(Map.Entry<String, Integer> entry : productor.getRawMaterials().entrySet()){
+            requiredMaterials.put(entry.getKey(), entry.getValue() * workers);
+        }
+
+        if(tryConsumeResource(city, requiredMaterials)){
+            Map<String, Integer> producedMaterials = new HashMap<>();
+            for(Map.Entry<String, Integer> entry : productor.getProducedMaterials().entrySet()){
+                producedMaterials.put(entry.getKey(), entry.getValue() * workers);
+            }
+
+            tryAddResource(city, producedMaterials);
+        }
+    }
+
+    public static BlockPos getCenterBlock(BlockPos origin, Vec3i dimensions, Rotation rot, boolean mirrored){
+        AABB buildingBx = getBuildingBox(origin, dimensions, rot, mirrored);
+        return BlockPos.containing(buildingBx.getCenter());
+    }
+
+    public static AABB getBuildingBox(BlockPos origin, Vec3i dimensions, Rotation rot, boolean mirrored){
+        BlockPos localMax = new BlockPos(dimensions.getX() - 1, dimensions.getY() - 1, dimensions.getZ() - 1);
+        BlockPos flipped = mirrored ? new BlockPos(localMax.getX(), localMax.getY(), -localMax.getZ()) : localMax;
+
+        BlockPos edge = origin.offset(flipped.rotate(rot));
+
+        double minX = Math.min(origin.getX(), edge.getX());
+        double minY = Math.min(origin.getY(), edge.getY());
+        double minZ = Math.min(origin.getZ(), edge.getZ());
+
+        double maxX = Math.max(origin.getX(), edge.getX());
+        double maxY = Math.max(origin.getY(), edge.getY());
+        double maxZ = Math.max(origin.getZ(), edge.getZ());
+
+
+        return new AABB(
+                minX, minY, minZ,
+                maxX, maxY, maxZ
+        );
+    }
+
+    public static BlockPos getClosestCity(BlockPos currentPos, ServerLevel level){
+        GlobalCitySavedData data = getCityData(level);
+
+        for(BlockPos existingPos : data.getCities().keySet()){
+            if(currentPos.closerThan(existingPos, 80)){ return existingPos;}
+        }
+
+        return null;
+    }
+
+    public static BlockPos getClosestBuilding(BlockPos pos, BlockPos anchor, ServerLevel level){
+        City city = getCityData(level).getCities().get(anchor);
+
+        for(BlockPos existingPos : city.getBuildings().keySet()){
+            if(pos.closerThan(existingPos, 10)){ return existingPos; }
+        }
+        return null;
+    }
+}
