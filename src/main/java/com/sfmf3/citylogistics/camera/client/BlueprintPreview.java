@@ -12,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -60,19 +61,15 @@ public class BlueprintPreview {
         Vec3 camPos = mc.gameRenderer.getMainCamera().position();
 
         PoseStack poseStack = event.getPoseStack();
-
         VertexConsumer buffer = mc.renderBuffers().bufferSource().getBuffer(RenderTypes.lines());
         VoxelShape cube = Shapes.block();
 
         if(buildings){
             for(CityClientInfo.BuildingBox box : CityClientInfo.allBuildings){
                 poseStack.pushPose();
-                poseStack.translate(-camPos.x, -camPos.y, -camPos.z);
-                poseStack.translate(
-                        box.origin().getX(),
-                        box.origin().getY(),
-                        box.origin().getZ()
-                );
+
+                setOrigin(poseStack, camPos, box.origin());
+
                 ShapeRenderer.renderShape(poseStack, buffer,
                         Shapes.box(
                                 0, 0, 0,
@@ -94,25 +91,7 @@ public class BlueprintPreview {
             if (blueprint == null) throw new CityOperationException("Couldn't fetch blueprint!");
             BlockPos centerOffset = CityManager.getCenterBlock(selectedBlock, blueprint.getDimensions(), selectedRotation, isMirrored);
 
-            poseStack.translate(
-                    selectedBlock.getX() - camPos.x,
-                    selectedBlock.getY() - camPos.y,
-                    selectedBlock.getZ() - camPos.z
-            );
-            poseStack.translate(0.5, 0.5, 0.5);
-
-            float rotDegrees = getRotationDegrees(selectedRotation);
-            poseStack.mulPose(Axis.YP.rotationDegrees(rotDegrees));
-
-            if (isMirrored) {
-                poseStack.scale(-1.0f, 1.0f, 1.0f);
-            }
-
-            poseStack.translate(
-                    -0.5 - centerOffset.getX(),
-                    -0.5 - centerOffset.getY(),
-                    -0.5 - centerOffset.getZ()
-            );
+            handlePositioning(poseStack, camPos, selectedBlock, centerOffset, selectedRotation, isMirrored);
 
             // render building bounding box
             ShapeRenderer.renderShape(poseStack, buffer,
@@ -144,6 +123,41 @@ public class BlueprintPreview {
             default -> 0.0f;
         };
     }
+
+    private static void setOrigin(PoseStack poseStack, Vec3 cameraPos, BlockPos origin){
+        poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
+        poseStack.translate(
+                origin.getX(),
+                origin.getY(),
+                origin.getZ()
+        );
+    }
+    private static void setRot(PoseStack poseStack, Rotation rotation){
+        float rotDegrees = getRotationDegrees(rotation);
+        poseStack.mulPose(Axis.YP.rotationDegrees(rotDegrees));
+    }
+    private static void setMirror(PoseStack poseStack, boolean isMirrored){
+        if(isMirrored) poseStack.scale(-1.0f, 1.0f, 1.0f);
+    }
+
+    private static void handlePositioning(PoseStack poseStack, Vec3 cameraPos, BlockPos origin, BlockPos center, Rotation rotation, boolean mirrored){
+
+        poseStack.translate(0.5, 0.5, 0.5);
+
+        setOrigin(poseStack, cameraPos, origin);
+        setRot(poseStack, rotation);
+        setMirror(poseStack, mirrored);
+
+        poseStack.translate(
+                -0.5 - center.getX(),
+                -0.5 - center.getY(),
+                -0.5 - center.getZ()
+        );
+
+    }
+
+    public static void toggleActive(){ active = !active;}
+    public static void setActive(boolean state){ active = state;}
 
     public static void toggleSelected(){selected = !selected; }
     public static void setSelected(boolean state){ selected = state; }
