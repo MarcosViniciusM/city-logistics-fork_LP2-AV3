@@ -21,6 +21,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.EventBusSubscriber;
+import org.apache.logging.log4j.core.pattern.AbstractStyleNameConverter;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -67,6 +68,7 @@ public class CityBuilderScreen extends BaseScreen {
             return;
         }
 
+        BlueprintPreview.setBuildings(true);
         this.categoryPanel = new CategoryPanel();
         this.add(categoryPanel);
 
@@ -105,10 +107,6 @@ public class CityBuilderScreen extends BaseScreen {
                 ));
             } else{ selectedBlock = null; }
 
-            // if the blueprint menu is open, show blueprint
-            if(selectedBlock != null && selectedPath != null){
-                updatePreviewState();
-            }
         }
 
         if(CameraController.isAnchorActive() && button.isRight()) {
@@ -167,6 +165,7 @@ public class CityBuilderScreen extends BaseScreen {
     @Override
     public void onClosed(){
         super.onClosed();
+        BlueprintPreview.setBuildings(false);
         BlueprintPreview.clear();
     }
 
@@ -356,6 +355,15 @@ public class CityBuilderScreen extends BaseScreen {
             dropdown.setPosAndSize((width - btnX)/2, 5, btnX, btnY);
             add(dropdown);
 
+            SimpleTextButton preview = new SimpleTextButton(this, Component.literal("Preview"), Icon.empty()) {
+                @Override
+                public void onClicked(MouseButton mouseButton) {
+                    updatePreviewState();
+                }
+            };
+            preview.setPosAndSize((width - (btnX*2)), height - btnY - 3, btnX, btnY);
+            add(preview);
+
             SimpleTextButton build = new SimpleTextButton(this, Component.literal("Build"), Icon.empty()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
@@ -371,7 +379,7 @@ public class CityBuilderScreen extends BaseScreen {
                     }
                 }
             };
-            build.setPosAndSize((width - btnX)/2, height - btnY - 3, btnX, btnY);
+            build.setPosAndSize((width - btnX), height - btnY - 3, btnX, btnY);
             add(build);
         }
 

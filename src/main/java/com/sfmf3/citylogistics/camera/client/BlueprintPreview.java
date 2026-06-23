@@ -7,18 +7,11 @@ import com.sfmf3.citylogistics.CityLogistics;
 import com.sfmf3.citylogistics.blueprint.Blueprint;
 import com.sfmf3.citylogistics.blueprint.BlueprintIO;
 import com.sfmf3.citylogistics.city.CityManager;
-import net.minecraft.client.Camera;
+import com.sfmf3.citylogistics.network.CityOperationException;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.ShapeRenderer;
-import net.minecraft.client.renderer.block.ModelBlockRenderer;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -28,14 +21,17 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-import net.neoforged.neoforge.model.data.ModelData;
 
 import java.util.Map;
 
-import static com.sfmf3.citylogistics.camera.CameraController.mc;
 
 @EventBusSubscriber(modid = CityLogistics.MODID, value = Dist.CLIENT)
 public class BlueprintPreview {
+
+    private static boolean active = false;
+    private static boolean selected = false;
+    private static boolean buildings = false;
+
 
     public static BlockPos selectedBlock = null;
     public static String selectedBuildingId = "";
@@ -56,69 +52,88 @@ public class BlueprintPreview {
         selectedPath = "";
     }
 
+    // honestly no idea why this isn't working.
+    // worked just fine before! didnt even change anything
     @SubscribeEvent
-    public static void onRenderLevelStage(RenderLevelStageEvent.AfterTranslucentBlocks event) {
-        BlockPos targetPos = selectedBlock;
-        String blueprintPath = selectedPath;
-        if (targetPos == null || blueprintPath == null || blueprintPath.isEmpty()) return;
-
-        if (mc.level == null || mc.player == null) return;
-
-        Blueprint blueprint = BlueprintIO.loadFromFile((selectedBuildingId + "/" + selectedPath), mc.level);
-        if (blueprint == null) return;
-
-        BlockPos centerOffset = CityManager.getCenterBlock(targetPos, blueprint.getDimensions(), selectedRotation, isMirrored);
-
-        PoseStack poseStack = event.getPoseStack();
-        VertexConsumer buffer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderTypes.lines());
-        VoxelShape cube = Shapes.block();
+    public static void onRenderLevel(RenderLevelStageEvent.AfterTranslucentBlocks event) {
+        Minecraft mc = Minecraft.getInstance();
         Vec3 camPos = mc.gameRenderer.getMainCamera().position();
 
-        poseStack.pushPose();
+        PoseStack poseStack = event.getPoseStack();
 
-        poseStack.translate(
-                targetPos.getX() - camPos.x,
-                targetPos.getY() - camPos.y,
-                targetPos.getZ() - camPos.z
-        );
-        poseStack.translate(0.5, 0.5, 0.5);
+        VertexConsumer buffer = mc.renderBuffers().bufferSource().getBuffer(RenderTypes.lines());
+        VoxelShape cube = Shapes.block();
 
-        float rotDegrees = getRotationDegrees(selectedRotation);
-        poseStack.mulPose(Axis.YP.rotationDegrees(rotDegrees));
-
-        if (isMirrored) {
-            poseStack.scale(-1.0f, 1.0f, 1.0f);
-        }
-
-        poseStack.translate(
-                -0.5 - centerOffset.getX(),
-                -0.5 - centerOffset.getY(),
-                -0.5 - centerOffset.getZ()
-        );
-
-        // render building bounding box
-        ShapeRenderer.renderShape(poseStack, buffer,
-                Shapes.box(
-                        0, 0, 0,
-                        blueprint.getDimensions().getX(),
-                        blueprint.getDimensions().getY(),
-                        blueprint.getDimensions().getZ())
-        , 0, 0, 0, 0xFFFFFFFF, 5.0F);
-
-      //  if(!renderBlocks) { poseStack.popPose(); return; }
-
-
-        for (Map.Entry<BlockPos, BlockState> entry : blueprint.getBlockData().entrySet()) {
-            BlockPos localPos = entry.getKey();
-            BlockState state = entry.getValue();
-
-            // if solid block, renders wireframe
-            if(state.isSolidRender()){
-                ShapeRenderer.renderShape(poseStack, buffer, cube, localPos.getX(), localPos.getY(), localPos.getZ(), 0xFFFF0000, 1.0f);
+        if(buildings){
+            for(CityClientInfo.BuildingBox box : CityClientInfo.allBuildings){
+                poseStack.pushPose();
+                poseStack.translate(-camPos.x, -camPos.y, -camPos.z);
+                poseStack.translate(
+                        box.origin().getX(),
+                        box.origin().getY(),
+                        box.origin().getZ()
+                );
+                ShapeRenderer.renderShape(poseStack, buffer,
+                        Shapes.box(
+                                0, 0, 0,
+                                box.dimensions().getX(),
+                                box.dimensions().getY(),
+                                box.dimensions().getZ()
+                        ), 0, 0, 0,
+                        0xFFFFFFFF, 5.0F
+                );
+                poseStack.popPose();
             }
         }
+        if(selected){
+            poseStack.pushPose();
+            if (selectedBlock == null || selectedPath == null || selectedPath.isEmpty()) return;
+            if (mc.level == null || mc.player == null) return;
 
-        poseStack.popPose();
+            Blueprint blueprint = BlueprintIO.loadFromFile((selectedBuildingId + "/" + selectedPath), mc.level);
+            if (blueprint == null) throw new CityOperationException("Couldn't fetch blueprint!");
+            BlockPos centerOffset = CityManager.getCenterBlock(selectedBlock, blueprint.getDimensions(), selectedRotation, isMirrored);
+
+            poseStack.translate(
+                    selectedBlock.getX() - camPos.x,
+                    selectedBlock.getY() - camPos.y,
+                    selectedBlock.getZ() - camPos.z
+            );
+            poseStack.translate(0.5, 0.5, 0.5);
+
+            float rotDegrees = getRotationDegrees(selectedRotation);
+            poseStack.mulPose(Axis.YP.rotationDegrees(rotDegrees));
+
+            if (isMirrored) {
+                poseStack.scale(-1.0f, 1.0f, 1.0f);
+            }
+
+            poseStack.translate(
+                    -0.5 - centerOffset.getX(),
+                    -0.5 - centerOffset.getY(),
+                    -0.5 - centerOffset.getZ()
+            );
+
+            // render building bounding box
+            ShapeRenderer.renderShape(poseStack, buffer,
+                    Shapes.box(
+                            0, 0, 0,
+                            blueprint.getDimensions().getX(),
+                            blueprint.getDimensions().getY(),
+                            blueprint.getDimensions().getZ())
+                    , 0, 0, 0, 0xFFFFFFFF, 5.0F);
+
+            for (Map.Entry<BlockPos, BlockState> entry : blueprint.getBlockData().entrySet()) {
+                BlockPos localPos = entry.getKey();
+                BlockState state = entry.getValue();
+                if (!state.isAir()) {
+                    ShapeRenderer.renderShape(poseStack, buffer, cube, localPos.getX(), localPos.getY(), localPos.getZ(), 0xFFFF0000, 1.0f);
+                }
+            }
+            poseStack.popPose();
+        }
+
+        mc.renderBuffers().bufferSource().endBatch(RenderTypes.lines());
     }
 
     private static float getRotationDegrees(Rotation rot) {
@@ -129,4 +144,10 @@ public class BlueprintPreview {
             default -> 0.0f;
         };
     }
+
+    public static void toggleSelected(){selected = !selected; }
+    public static void setSelected(boolean state){ selected = state; }
+
+    public static void toggleBuildings(){buildings = !buildings;}
+    public static void setBuildings(boolean state) {buildings = state;}
 }
