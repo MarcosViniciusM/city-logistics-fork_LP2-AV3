@@ -8,7 +8,9 @@ import com.sfmf3.citylogistics.building.BuildingState;
 import com.sfmf3.citylogistics.building.behavior.IExtraction;
 import com.sfmf3.citylogistics.building.behavior.IHousing;
 import com.sfmf3.citylogistics.building.behavior.IProduction;
+import com.sfmf3.citylogistics.camera.client.CityClientInfo;
 import com.sfmf3.citylogistics.network.CityOperationException;
+import com.sfmf3.citylogistics.network.payload.CityResponsePayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerLevel;
@@ -309,5 +311,30 @@ public class CityManager {
             if(pos.closerThan(existingPos, 10)){ return existingPos; }
         }
         return null;
+    }
+
+    public static CityResponsePayload returnInfo(BlockPos anchor, UUID playerUUID, ServerLevel level){
+
+        City city = getCityData(level).getCities().get(anchor);
+        if(!city.canEdit(playerUUID)) throw new CityOperationException("Player has unauthorized access!");
+
+        List<CityClientInfo.BuildingBox> boxes = new ArrayList<>();
+        for (AbstractBuilding b : city.getBuildings().values()) {
+            boxes.add(new CityClientInfo.BuildingBox(
+                    b.getOrigin(),
+                    b.getDimensions(),
+                    b.getRotation(),
+                    b.getMirrored(),
+                    b.getBuildingID()
+            ));
+        }
+        return new CityResponsePayload(
+                anchor,
+                city.getStockpileCurrent(),
+                city.getStockpileMax(),
+                city.getPopulation(),
+                city.getPopulationCap(),
+                boxes
+        );
     }
 }

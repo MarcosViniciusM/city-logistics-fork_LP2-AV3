@@ -35,6 +35,7 @@ public class ServerPayloadHandler {
                             payload.buildingId()
                     );
                     serverPlayer.sendSystemMessage(Component.literal("Building created successfully!"));
+                    context.reply(CityManager.returnInfo(city.getAnchor(), serverPlayer.getUUID(), level));
                 } catch (Exception e) {
                     serverPlayer.sendSystemMessage(Component.literal("Error: " + e.getMessage()).withStyle(ChatFormatting.DARK_RED));
                     CityLogistics.LOGGER.error("Failed to add building: " + e);
@@ -64,6 +65,7 @@ public class ServerPayloadHandler {
                 try {
                     CityManager.addCity(level, payload.name(), payload.cityAnchor(), serverPlayer.getUUID());
                     serverPlayer.sendSystemMessage(Component.literal("City created successfully!"));
+                    context.reply(CityManager.returnInfo(payload.cityAnchor(), serverPlayer.getUUID(), level));
                 } catch (Exception e){
                     serverPlayer.sendSystemMessage(
                             Component.literal("Error: " + e.getMessage()).withStyle(ChatFormatting.DARK_RED)
@@ -103,33 +105,11 @@ public class ServerPayloadHandler {
                 try{
                     ServerLevel level = serverPlayer.level();
                     BlockPos cityAnchor = CityManager.getClosestCity(payload.playerPos(), level);
-                    if (cityAnchor == null) throw new CityOperationException("Close enough city not found!");
-                    City city = CityManager.getCityData(level).getCities().get(cityAnchor);
+                    // if no city, return.
+                    if(cityAnchor == null) return;
 
-                    if (city == null)
-                        throw new CityOperationException("Honestly i have no idea how you got this error. Congratulations");
-                    if (!city.canEdit(serverPlayer.getUUID()))
-                        throw new CityOperationException("Player has no editing privileges in this city!");
-                    List<CityClientInfo.BuildingBox> boxes = new ArrayList<>();
-
-                    for (AbstractBuilding b : city.getBuildings().values()) {
-                        boxes.add(new CityClientInfo.BuildingBox(
-                                b.getOrigin(),
-                                b.getDimensions(),
-                                b.getRotation(),
-                                b.getMirrored(),
-                                b.getBuildingID()
-                        ));
-                    }
-
-                    context.reply(new CityResponsePayload(
-                            cityAnchor,
-                            city.getStockpileCurrent(),
-                            city.getStockpileMax(),
-                            city.getPopulation(),
-                            city.getPopulationCap(),
-                            boxes
-                    ));
+                    // if city, try sending info back. will fail if you dont have permission
+                    context.reply(CityManager.returnInfo(cityAnchor, serverPlayer.getUUID(), level));
                 } catch (Exception e) {
                     serverPlayer.sendSystemMessage(Component.literal("Error: " + e.getMessage()).withStyle(ChatFormatting.DARK_RED));
                     CityLogistics.LOGGER.error("Failed to handle city request for " + serverPlayer.getName());
