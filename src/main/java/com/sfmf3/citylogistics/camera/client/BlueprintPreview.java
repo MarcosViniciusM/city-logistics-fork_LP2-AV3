@@ -35,13 +35,15 @@ public class BlueprintPreview {
 
 
     public static BlockPos selectedBlock = null;
+    public static Blueprint selectedBlueprint = null;
     public static String selectedBuildingId = "";
     public static String selectedPath = "";
     public static Rotation selectedRotation = Rotation.NONE;
     public static boolean isMirrored = false;
 
-    public static void update(BlockPos pos, String id, String path, Rotation rot, boolean mirror) {
+    public static void update(BlockPos pos, Blueprint blueprint, String id, String path, Rotation rot, boolean mirror) {
         selectedBlock = pos;
+        selectedBlueprint = blueprint;
         selectedBuildingId = id;
         selectedPath = path;
         selectedRotation = rot;
@@ -87,22 +89,21 @@ public class BlueprintPreview {
             if (selectedBlock == null || selectedPath == null || selectedPath.isEmpty()) return;
             if (mc.level == null || mc.player == null) return;
 
-            Blueprint blueprint = BlueprintIO.loadFromFile((selectedBuildingId + "/" + selectedPath), mc.level);
-            if (blueprint == null) throw new CityOperationException("Couldn't fetch blueprint!");
-            BlockPos centerOffset = CityManager.getCenterBlock(selectedBlock, blueprint.getDimensions(), selectedRotation, isMirrored);
+            if(selectedBlueprint == null) return;
 
-            handlePositioning(poseStack, camPos, selectedBlock, centerOffset, selectedRotation, isMirrored);
+            setOrigin(poseStack, camPos, selectedBlock);
+            //handlePositioning(poseStack, camPos, selectedBlock, centerOffset, selectedRotation, isMirrored);
 
             // render building bounding box
             ShapeRenderer.renderShape(poseStack, buffer,
                     Shapes.box(
                             0, 0, 0,
-                            blueprint.getDimensions().getX(),
-                            blueprint.getDimensions().getY(),
-                            blueprint.getDimensions().getZ())
+                            selectedBlueprint.getDimensions().getX(),
+                            selectedBlueprint.getDimensions().getY(),
+                            selectedBlueprint.getDimensions().getZ())
                     , 0, 0, 0, 0xFFFFFFFF, 5.0F);
 
-            for (Map.Entry<BlockPos, BlockState> entry : blueprint.getBlockData().entrySet()) {
+            for (Map.Entry<BlockPos, BlockState> entry : selectedBlueprint.getBlockData().entrySet()) {
                 BlockPos localPos = entry.getKey();
                 BlockState state = entry.getValue();
                 if (!state.isAir()) {

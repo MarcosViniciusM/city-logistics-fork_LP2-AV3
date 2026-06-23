@@ -1,13 +1,12 @@
 package com.sfmf3.citylogistics.camera.client;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import com.sfmf3.citylogistics.CityLogistics;
+import com.sfmf3.citylogistics.blueprint.Blueprint;
 import com.sfmf3.citylogistics.building.BuildingState;
-import com.sfmf3.citylogistics.city.CityManager;
+import com.sfmf3.citylogistics.network.payload.BlueprintResponsePayload;
 import com.sfmf3.citylogistics.network.payload.CityRequestPayload;
 import com.sfmf3.citylogistics.network.payload.CityResponsePayload;
 import dev.ftb.mods.ftblibrary.client.gui.widget.ScreenWrapper;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -16,9 +15,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.level.block.Rotation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.network.PacketDistributor;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,10 +30,20 @@ public class CityClientInfo {
     public static int pop;
     public static int popcap;
 
+    public static Blueprint selectedBlueprint = null;
 
     public static List<BuildingBox> allBuildings = new ArrayList<>();
 
     public static SelectedBuildingDetails selectedBuildingDetails = null;
+
+    public static void setBlueprintInfo(BlueprintResponsePayload payload) {
+        selectedBlueprint = payload.blueprint();
+        if(mc.screen instanceof ScreenWrapper wrapper){
+            if(wrapper.getGui() instanceof CityBuilderScreen screen){
+                screen.updatePreviewState();
+            }
+        }
+    }
 
     public record BuildingBox(
             BlockPos origin,

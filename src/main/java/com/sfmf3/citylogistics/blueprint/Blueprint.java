@@ -4,6 +4,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Collections;
@@ -52,6 +55,9 @@ public class Blueprint {
                     ).fieldOf("blocks").forGetter(Blueprint::getBlockData)
             ).apply(instance, Blueprint::new)
     );
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, Blueprint> STREAM_CODEC =
+            ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
     public String getName() { return name; }
     public Vec3i getDimensions() { return dimensions; }

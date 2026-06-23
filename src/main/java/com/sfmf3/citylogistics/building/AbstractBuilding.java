@@ -7,6 +7,7 @@ import com.sfmf3.citylogistics.city.City;
 import com.sfmf3.citylogistics.city.CityManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -62,7 +63,7 @@ public abstract class AbstractBuilding {
         return Mth.clamp(Mth.floor(total), 0, maxValue);
     }
 
-    public void tickConstruction(Level level, City city){
+    public void tickConstruction(ServerLevel level, City city){
         if(currentTarget == null) { currentTarget = BlueprintIO.loadFromFile(getPath(), level); }
         if(currentBuildingY == null) { findLowestUnfinishedLayer(level); }
         if(currentBuildingY >= this.currentTarget.getDimensions().getY()) { findLowestUnfinishedLayer(level); }

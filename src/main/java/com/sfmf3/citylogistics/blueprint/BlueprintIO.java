@@ -11,6 +11,7 @@ import com.sfmf3.citylogistics.network.CityOperationException;
 import net.minecraft.core.Vec3i;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.entity.player.Input;
@@ -31,7 +32,7 @@ public class BlueprintIO {
             .create();
 
     // i miss creating your own blueprints from scratch
-    public static Blueprint loadFromFile(String path, Level level) {
+    public static Blueprint loadFromFile(String path, ServerLevel level) {
         Identifier location = Identifier.fromNamespaceAndPath(CityLogistics.MODID, "blueprints/"+path);
 
         try{

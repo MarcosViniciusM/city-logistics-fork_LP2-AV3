@@ -1,6 +1,8 @@
 package com.sfmf3.citylogistics.network;
 
 import com.sfmf3.citylogistics.CityLogistics;
+import com.sfmf3.citylogistics.blueprint.Blueprint;
+import com.sfmf3.citylogistics.blueprint.BlueprintIO;
 import com.sfmf3.citylogistics.building.AbstractBuilding;
 import com.sfmf3.citylogistics.camera.client.CityClientInfo;
 import com.sfmf3.citylogistics.city.City;
@@ -113,6 +115,24 @@ public class ServerPayloadHandler {
                 } catch (Exception e) {
                     serverPlayer.sendSystemMessage(Component.literal("Error: " + e.getMessage()).withStyle(ChatFormatting.DARK_RED));
                     CityLogistics.LOGGER.error("Failed to handle city request for " + serverPlayer.getName());
+                }
+            }
+        });
+    }
+
+    public static void handleBlueprintRequest(final BlueprintRequestPayload payload, final IPayloadContext context){
+        context.enqueueWork(() -> {
+            if(context.player() instanceof ServerPlayer serverPlayer){
+                try{
+                    ServerLevel level = serverPlayer.level();
+                    Blueprint blueprint = BlueprintIO.loadFromFile(payload.path(), level);
+                    if(blueprint == null) throw new CityOperationException("Couldn't find blueprint!");
+
+                    context.reply(new BlueprintResponsePayload(blueprint));
+
+                } catch (Exception e) {
+                    serverPlayer.sendSystemMessage(Component.literal(("Error: " + e.getMessage())).withStyle(ChatFormatting.DARK_RED));
+                    CityLogistics.LOGGER.error("Failed to handle blueprint request for " +serverPlayer.getName());
                 }
             }
         });

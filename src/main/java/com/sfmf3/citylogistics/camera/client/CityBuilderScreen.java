@@ -1,11 +1,13 @@
 package com.sfmf3.citylogistics.camera.client;
 
 import com.sfmf3.citylogistics.CityLogistics;
+import com.sfmf3.citylogistics.blueprint.BlueprintIO;
 import com.sfmf3.citylogistics.blueprint.BlueprintRegistry;
 import com.sfmf3.citylogistics.camera.CameraController;
 import com.sfmf3.citylogistics.network.ClientPayloadHandler;
 import com.sfmf3.citylogistics.network.payload.AddBuildingPayload;
 import com.sfmf3.citylogistics.network.payload.AddCityPayload;
+import com.sfmf3.citylogistics.network.payload.BlueprintRequestPayload;
 import dev.ftb.mods.ftblibrary.client.gui.input.Key;
 import dev.ftb.mods.ftblibrary.client.gui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.client.gui.theme.Theme;
@@ -166,6 +168,7 @@ public class CityBuilderScreen extends BaseScreen {
     public void onClosed(){
         super.onClosed();
         BlueprintPreview.setBuildings(false);
+        BlueprintPreview.setSelected(false);
         BlueprintPreview.clear();
     }
 
@@ -173,14 +176,17 @@ public class CityBuilderScreen extends BaseScreen {
         return event.event().input() == binding.getKey().getValue();
     }
 
-    private void updatePreviewState() {
+    public void updatePreviewState() {
+
         BlueprintPreview.update(
                 this.selectedBlock,
+                selectedBlueprint,
                 this.selectedBuildingId,
                 this.selectedPath,
                 this.selectedRotation,
                 this.isMirrored
         );
+        BlueprintPreview.setSelected(true);
     }
 
     // removes ugly background
@@ -358,7 +364,7 @@ public class CityBuilderScreen extends BaseScreen {
             SimpleTextButton preview = new SimpleTextButton(this, Component.literal("Preview"), Icon.empty()) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
-                    updatePreviewState();
+                    mc.player.connection.send(new BlueprintRequestPayload(selectedBuildingId+"/"+selectedPath));
                 }
             };
             preview.setPosAndSize((width - (btnX*2)), height - btnY - 3, btnX, btnY);

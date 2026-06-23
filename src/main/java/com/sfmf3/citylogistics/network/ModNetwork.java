@@ -54,5 +54,15 @@ public class ModNetwork {
                 CityResponsePayload.STREAM_CODEC,
                 ClientPayloadHandler::handleCityResponse
         );
+        registrar.playToServer(
+                BlueprintRequestPayload.TYPE,
+                BlueprintRequestPayload.STREAM_CODEC,
+                ServerPayloadHandler::handleBlueprintRequest
+        );
+        registrar.playToClient(
+                BlueprintResponsePayload.TYPE,
+                BlueprintResponsePayload.STREAM_CODEC,
+                ClientPayloadHandler::handleBlueprintResponse
+        );
     }
 }
