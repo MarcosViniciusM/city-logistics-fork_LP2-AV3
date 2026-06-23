@@ -1,23 +1,19 @@
 
-Installation information
+Introdução
 =======
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+Este é um mod sendo desenvolvido para a AV3 de LP2 de 2026.1 da UFRN. Devido à natureza dos mods, o número de classes
+talvez seja muito grande para uma explicação profunda, mas para os propósitos desse trabalho, segue-se o link para o
+[Mermaid.js](https://mermaid.ai/app/projects/2fe4f679-3eef-4866-8071-8e8cea2b6338/diagrams/689d68db-5fb7-4844-a667-588eff911bde/share/invite/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkb2N1bWVudElEIjoiNjg5ZDY4ZGItNWZiNy00ODQ0LWE2NjctNTg4ZWZmOTExYmRlIiwiYWNjZXNzIjoiVmlldyIsImlhdCI6MTc4MjE4MjYxNn0.enQeEVd1W5unYc_r4vbBAjLhwKDLhd8S9EjbUR7MjC0?entryPoint=share-modal) onde as classes que serão focadas na explicação são ilustradas.
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
-
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
-
-Mapping Names:
+Implementação:
 ============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+Este mod busca introduzir um sistema de gerenciamento de cidades, emulando jogos city-builder como The Sims, ou
+Cities: Skyline, porém envolvendo uma versão abstrata dos recursos comuns do jogo Minecraft. Assim, o jogador poderia
+investir tempo e recursos para estabelecer uma cidade, gerenciamento o posicionamento e financiamento de prédios, 
+indústrias e domicílios para sustentar uma população e ter uma fonte estável de recursos, semelhante à jogos 
+incrementais, tipo Cookie Clicker, onde sua cidade continua produzindo recursos mesmo quando você não está jogando.
+
 
 Additional Resources: 
 ==========
