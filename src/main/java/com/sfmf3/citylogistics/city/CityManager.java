@@ -104,6 +104,7 @@ public class CityManager {
     public static void addCity(ServerLevel level, String name, BlockPos pos, UUID playerUUID){
         GlobalCitySavedData data = getCityData(level);
 
+
         for(BlockPos existingPos : data.getCities().keySet()){
             if(pos.closerThan(existingPos, 150)){
                 throw new CityOperationException("City placement failed. Too close to existing cities!");

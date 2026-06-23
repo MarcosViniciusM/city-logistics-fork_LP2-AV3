@@ -23,15 +23,21 @@ public class ServerPayloadHandler {
             if (context.player() instanceof ServerPlayer serverPlayer){
                 ServerLevel level = serverPlayer.level();
 
-                City city = CityManager.getCityData(level).getCities().get(payload.cityAnchor());
-                if(city != null && city.canEdit(serverPlayer.getUUID())){
+                try{
+                    City city = CityManager.getCityData(level).getCities().get(payload.cityAnchor());
+                    if(city == null) throw new CityOperationException("Unable to fetch city!");
                     CityManager.addBuilding(
                             level, city,
                             payload.origin(),
                             payload.path(),
                             payload.rot(),
                             payload.mirrored(),
-                            payload.buildingId());
+                            payload.buildingId()
+                    );
+                    serverPlayer.sendSystemMessage(Component.literal("Building created successfully!"));
+                } catch (Exception e) {
+                    serverPlayer.sendSystemMessage(Component.literal("Error: " + e.getMessage()).withStyle(ChatFormatting.DARK_RED));
+                    CityLogistics.LOGGER.error("Failed to add building: " + e);
                 }
             }
         });
