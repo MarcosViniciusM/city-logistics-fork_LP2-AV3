@@ -1,5 +1,6 @@
 package com.sfmf3.citylogistics.city;
 
+import com.sfmf3.citylogistics.blueprint.Blueprint;
 import com.sfmf3.citylogistics.blueprint.BlueprintIO;
 import com.sfmf3.citylogistics.building.AbstractBuilding;
 import com.sfmf3.citylogistics.building.BuildingRegistry;
@@ -130,7 +131,8 @@ public class CityManager {
         BuildingRegistry.BuildingType<?> type = BuildingRegistry.BUILDINGS.get(buildingId);
         if(type == null) { throw new CityOperationException("Unknown building type? " + buildingId); }
 
-        Vec3i dimensions = BlueprintIO.getDimensions(path);
+        Blueprint blueprint = BlueprintIO.loadFromFile(buildingId+"/"+path, level);
+        Vec3i dimensions = blueprint.getDimensions();
         BlockPos center = getCenterBlock(origin, dimensions, rot, mirrored);
         AABB boundingBox = getBuildingBox(origin, dimensions, rot, mirrored);
 

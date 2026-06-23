@@ -31,7 +31,7 @@ import java.util.Map;
 import static com.sfmf3.citylogistics.camera.CameraController.mc;
 import static com.sfmf3.citylogistics.camera.client.CityClientInfo.*;
 
-@EventBusSubscriber(Dist.CLIENT)
+@EventBusSubscriber(modid = CityLogistics.MODID, value = Dist.CLIENT)
 public class CityBuilderScreen extends BaseScreen {
 
     protected CityInfoPanel cityInfoPanel;

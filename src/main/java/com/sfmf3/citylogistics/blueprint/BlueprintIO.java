@@ -7,14 +7,20 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.mojang.serialization.JsonOps;
 import com.sfmf3.citylogistics.CityLogistics;
+import com.sfmf3.citylogistics.network.CityOperationException;
 import net.minecraft.core.Vec3i;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.fml.ModList;
 
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -24,87 +30,25 @@ public class BlueprintIO {
             .disableHtmlEscaping()
             .create();
 
-    public static void saveToFile(Blueprint blueprint, Level level){
-        Path filePath = getDirectory(level).resolve(blueprint.getName() + ".json");
-        RegistryOps<JsonElement> ops = level.registryAccess().createSerializationContext(JsonOps.INSTANCE);
-
-        Blueprint.CODEC.encodeStart(ops, blueprint)
-                .resultOrPartial(err -> System.err.println("Failed to save blueprint: " + err))
-                .ifPresent(json -> {
-                    try (var writer = Files.newBufferedWriter(filePath)){
-                        GSON.toJson(json, writer);
-                    } catch (IOException e){
-                        e.printStackTrace();
-                    }
-                });
-    }
-
-    private static Reader getBlueprintReader(String path) {
-        try {
-            var jarContents = ModList.get().getModFileById(CityLogistics.MODID).getFile().getContents();
-            InputStream stream = jarContents.openFile("default_blueprints/" + path);
-            if (stream != null) {
-                return new InputStreamReader(stream);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
+    // i miss creating your own blueprints from scratch
     public static Blueprint loadFromFile(String path, Level level) {
-        Reader fileReader = getBlueprintReader(path);
-        if (fileReader == null) return null;
+        Identifier location = Identifier.fromNamespaceAndPath(CityLogistics.MODID, "blueprints/"+path);
 
-        try (Reader reader = fileReader) {
-            JsonElement json = JsonParser.parseReader(reader);
-            RegistryOps<JsonElement> ops = level.registryAccess().createSerializationContext(JsonOps.INSTANCE);
+        try{
+            ResourceManager manager = level.getServer().getResourceManager();
+            Resource resource = manager.getResource(location)
+                    .orElseThrow(() -> new RuntimeException("Blueprint file missing at: " + location));
 
-            return Blueprint.CODEC.parse(ops, json)
-                    .getOrThrow(err -> new RuntimeException("Failed to parse Blueprint JSON: " + err));
+            try (Reader reader = resource.openAsReader()){
+                JsonElement json = JsonParser.parseReader(reader);
+                RegistryOps<JsonElement> ops = level.registryAccess().createSerializationContext(JsonOps.INSTANCE);
+
+                return Blueprint.CODEC.parse(ops, json)
+                        .getOrThrow(err -> new RuntimeException("Failed to parse Blueprint JSON: " + err));
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
-    }
-
-    public static Path getDirectory(Level level){
-        Path path = level.getServer().getWorldPath(LevelResource.ROOT).resolve("blueprints");
-
-        try{
-            Files.createDirectories(path);
-        } catch (IOException e){
-            e.printStackTrace();
-        }
-
-        return path;
-    }
-
-    public static Vec3i getDimensions(String path) {
-        Reader fileReader = getBlueprintReader(path);
-        if (fileReader == null) return Vec3i.ZERO;
-
-        try (JsonReader reader = new JsonReader(fileReader)) {
-            reader.beginObject();
-            while (reader.hasNext()) {
-                String fieldName = reader.nextName();
-
-                if (fieldName.equals("dimensions")) {
-                    reader.beginArray();
-                    int x = reader.nextInt();
-                    int y = reader.nextInt();
-                    int z = reader.nextInt();
-                    reader.endArray();
-
-                    return new Vec3i(x, y, z);
-                } else {
-                    reader.skipValue();
-                }
-            }
-            reader.endObject();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return Vec3i.ZERO;
     }
 }
