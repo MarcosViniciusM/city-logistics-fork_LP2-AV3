@@ -24,22 +24,28 @@ import static com.sfmf3.citylogistics.camera.CameraController.mc;
 
 @EventBusSubscriber(modid = CityLogistics.MODID, value = Dist.CLIENT)
 public class CityClientInfo {
+    // needed for most city operations.
     public static BlockPos cityAnchor = null;
+
+    // needed for resource information.
     public static Map<String, Integer> stockCurrent = null;
     public static Map<String, Integer> stockLimits = null;
     public static int pop;
     public static int popcap;
-
-    public static Blueprint selectedBlueprint = null;
-
     public static List<BuildingBox> allBuildings = new ArrayList<>();
 
+
+    // blueprint. gotten only when going to place buildings
+    public static Blueprint selectedBlueprint = null;
+
+    // gotten only when selecting a specific building
     public static SelectedBuildingDetails selectedBuildingDetails = null;
 
     public static void setBlueprintInfo(BlueprintResponsePayload payload) {
         selectedBlueprint = payload.blueprint();
         if(mc.screen instanceof ScreenWrapper wrapper){
             if(wrapper.getGui() instanceof CityBuilderScreen screen){
+                screen.updateBlueprint();
                 screen.updatePreviewState();
             }
         }
@@ -69,6 +75,8 @@ public class CityClientInfo {
         mc.player.connection.send(new CityRequestPayload(mc.player.blockPosition()));
     }
 
+    // populates main values
+    // maybe separate buildings into its own later
     public static void setCityInfo(CityResponsePayload payload){
         cityAnchor = payload.cityAnchor();
         pop = payload.pop();

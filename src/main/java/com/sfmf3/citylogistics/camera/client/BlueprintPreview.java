@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -41,13 +42,16 @@ public class BlueprintPreview {
     public static Rotation selectedRotation = Rotation.NONE;
     public static boolean isMirrored = false;
 
-    public static void update(BlockPos pos, Blueprint blueprint, String id, String path, Rotation rot, boolean mirror) {
+    public static void update(BlockPos pos, String id, String path, Rotation rot, boolean mirror) {
         selectedBlock = pos;
-        selectedBlueprint = blueprint;
         selectedBuildingId = id;
         selectedPath = path;
         selectedRotation = rot;
         isMirrored = mirror;
+    }
+
+    public static void updateBlueprint(Blueprint blueprint){
+        selectedBlueprint = blueprint;
     }
 
     public static void clear() {
@@ -55,8 +59,9 @@ public class BlueprintPreview {
         selectedPath = "";
     }
 
-    // honestly no idea why this isn't working.
-    // worked just fine before! didnt even change anything
+    // works, but having issues with blueprint building box detection and display.
+    // probably related to the 3 different methods of rotation we are using
+    // and the getBuildingBox function which is horribly overtuned
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent.AfterTranslucentBlocks event) {
         Minecraft mc = Minecraft.getInstance();
@@ -70,7 +75,7 @@ public class BlueprintPreview {
             for(CityClientInfo.BuildingBox box : CityClientInfo.allBuildings){
                 poseStack.pushPose();
 
-                setOrigin(poseStack, camPos, box.origin());
+                handlePositioning(poseStack, camPos, box.origin(), box.rotation(), box.mirrored());
 
                 ShapeRenderer.renderShape(poseStack, buffer,
                         Shapes.box(
@@ -88,11 +93,9 @@ public class BlueprintPreview {
             poseStack.pushPose();
             if (selectedBlock == null || selectedPath == null || selectedPath.isEmpty()) return;
             if (mc.level == null || mc.player == null) return;
-
             if(selectedBlueprint == null) return;
 
-            setOrigin(poseStack, camPos, selectedBlock);
-            //handlePositioning(poseStack, camPos, selectedBlock, centerOffset, selectedRotation, isMirrored);
+            handlePositioning(poseStack, camPos, selectedBlock, selectedRotation, isMirrored);
 
             // render building bounding box
             ShapeRenderer.renderShape(poseStack, buffer,
@@ -141,19 +144,11 @@ public class BlueprintPreview {
         if(isMirrored) poseStack.scale(-1.0f, 1.0f, 1.0f);
     }
 
-    private static void handlePositioning(PoseStack poseStack, Vec3 cameraPos, BlockPos origin, BlockPos center, Rotation rotation, boolean mirrored){
-
-        poseStack.translate(0.5, 0.5, 0.5);
+    private static void handlePositioning(PoseStack poseStack, Vec3 cameraPos, BlockPos origin, Rotation rotation, boolean mirrored){
 
         setOrigin(poseStack, cameraPos, origin);
         setRot(poseStack, rotation);
         setMirror(poseStack, mirrored);
-
-        poseStack.translate(
-                -0.5 - center.getX(),
-                -0.5 - center.getY(),
-                -0.5 - center.getZ()
-        );
 
     }
 

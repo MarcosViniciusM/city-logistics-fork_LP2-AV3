@@ -134,19 +134,18 @@ public class CityManager {
         if(type == null) { throw new CityOperationException("Unknown building type? " + buildingId); }
 
         Blueprint blueprint = BlueprintIO.loadFromFile(buildingId+"/"+path, level);
+        if(blueprint == null) throw new CityOperationException("Blueprint null!");
         Vec3i dimensions = blueprint.getDimensions();
-        BlockPos center = getCenterBlock(origin, dimensions, rot, mirrored);
         AABB boundingBox = getBuildingBox(origin, dimensions, rot, mirrored);
 
         for(BlockPos pos : city.getBuildings().keySet()){
-            if(pos.closerThan(center, 50)){
+            if(pos.closerThan(origin, 50)){
 
                 AbstractBuilding existing = city.getBuildings().get(pos);
                 AABB existingBox = getBuildingBox(pos, existing.getDimensions(), existing.getRotation(), existing.getMirrored());
                 if(boundingBox.intersects(existingBox)) throw new CityOperationException("Building intersects with another building!");
             }
         }
-
         // if no building intersects, run as normal
         AbstractBuilding building = type.factory().apply(level, origin, dimensions, path, rot, mirrored);
         city.getBuildings().put(origin, building);
@@ -274,7 +273,7 @@ public class CityManager {
     }
 
     public static AABB getBuildingBox(BlockPos origin, Vec3i dimensions, Rotation rot, boolean mirrored){
-        BlockPos localMax = new BlockPos(dimensions.getX() - 1, dimensions.getY() - 1, dimensions.getZ() - 1);
+        BlockPos localMax = new BlockPos(dimensions.getX() + 1, dimensions.getY() + 1, dimensions.getZ() + 1);
         BlockPos flipped = mirrored ? new BlockPos(localMax.getX(), localMax.getY(), -localMax.getZ()) : localMax;
 
         BlockPos edge = origin.offset(flipped.rotate(rot));

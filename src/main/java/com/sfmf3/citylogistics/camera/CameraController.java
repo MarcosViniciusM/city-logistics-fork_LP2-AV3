@@ -58,6 +58,7 @@ public class CameraController {
         if(mc.player != null) cameraInstance.copyPosition(mc.player);
         cameraInstance.spawn();
         mc.setCameraEntity(cameraInstance);
+        new CityBuilderScreen().openGui();
     }
 
     private static void disableCamera(){
@@ -71,10 +72,13 @@ public class CameraController {
         if(mc.player != null){
             mc.player.input = new KeyboardInput(mc.options);
         }
+        if(mc.screen != null){
+            mc.setScreen(null);
+        }
     }
 
     public static void anchorToggle(){
-        if(!active) return;
+        if(!active) toggle();
         if(anchorActive) {
             disableAnchor();
         } else{
@@ -84,6 +88,7 @@ public class CameraController {
 
         if(!anchorActive){
             mc.mouseHandler.grabMouse();
+            toggle();
         }
     }
 
@@ -91,15 +96,12 @@ public class CameraController {
         mc.mouseHandler.releaseMouse();
         anchor = new AnchorHandler(32.0D);
 
-        new CityBuilderScreen().openGui();
     }
 
     private static void disableAnchor(){
         mc.mouseHandler.grabMouse();
         anchor = null;
-        if(mc.screen != null){
-            mc.setScreen(null);
-        }
+
     }
 
     public static void orbitPoint(Vec3 point){

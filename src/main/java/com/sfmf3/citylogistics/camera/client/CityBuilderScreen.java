@@ -1,6 +1,7 @@
 package com.sfmf3.citylogistics.camera.client;
 
 import com.sfmf3.citylogistics.CityLogistics;
+import com.sfmf3.citylogistics.blueprint.Blueprint;
 import com.sfmf3.citylogistics.blueprint.BlueprintIO;
 import com.sfmf3.citylogistics.blueprint.BlueprintRegistry;
 import com.sfmf3.citylogistics.camera.CameraController;
@@ -23,6 +24,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
 import org.apache.logging.log4j.core.pattern.AbstractStyleNameConverter;
 import org.lwjgl.glfw.GLFW;
 
@@ -108,7 +110,9 @@ public class CityBuilderScreen extends BaseScreen {
                         + selectedBlock.getZ() + "!"
                 ));
             } else{ selectedBlock = null; }
-
+            if(!selectedPath.isEmpty()){
+                updatePreviewState();
+            }
         }
 
         if(CameraController.isAnchorActive() && button.isRight()) {
@@ -155,11 +159,27 @@ public class CityBuilderScreen extends BaseScreen {
 
     @Override
     public boolean keyPressed(Key event){
+        if(keybindPressed(ModKeys.CAMERA_TOGGLE, event)){
+            CameraController.toggle();
+            return true;
+        }
         if(keybindPressed(ModKeys.CAMERA_ANCHOR, event)){
             CameraController.anchorToggle();
             return true;
         }
 
+        if(!selectedPath.isEmpty()){
+            if(event.matches(ModKeys.BUILDING_MIRROR)) {
+                isMirrored = !isMirrored;
+                updatePreviewState();
+                return true;
+            }
+            if(event.matches(ModKeys.BUILDING_ROTATE)){
+                selectedRotation = selectedRotation.getRotated(Rotation.CLOCKWISE_90);
+                updatePreviewState();
+                return true;
+            }
+        }
 
         return super.keyPressed(event);
     }
@@ -177,16 +197,19 @@ public class CityBuilderScreen extends BaseScreen {
     }
 
     public void updatePreviewState() {
-
+        if(BlueprintPreview.selectedBlueprint == null) return;
         BlueprintPreview.update(
                 this.selectedBlock,
-                selectedBlueprint,
                 this.selectedBuildingId,
                 this.selectedPath,
                 this.selectedRotation,
                 this.isMirrored
         );
         BlueprintPreview.setSelected(true);
+    }
+
+    public void updateBlueprint(){
+        BlueprintPreview.updateBlueprint(selectedBlueprint);
     }
 
     // removes ugly background
@@ -200,6 +223,11 @@ public class CityBuilderScreen extends BaseScreen {
     // removes background blur
     @Override
     public boolean shouldRenderBlur(){ return false; }
+
+    @Override
+    public boolean shouldCloseOnEsc() {
+        return false;
+    }
 
     protected class CategoryPanel extends Panel {
         private final int btnWidth = 75;

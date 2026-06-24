@@ -20,6 +20,8 @@ public class ModKeys {
         event.register(CAMERA_COMMIT);
         event.register(CAMERA_INTERACT);
         event.register(CAMERA_REGISTER);
+        event.register(BUILDING_ROTATE);
+        event.register(BUILDING_MIRROR);
     }
 
     public static final KeyMapping CAMERA_TOGGLE = new KeyMapping(
@@ -59,6 +61,21 @@ public class ModKeys {
             KeyConflictContext.UNIVERSAL,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_V,
+            KeyMapping.Category.MISC
+    );
+
+    public static final KeyMapping BUILDING_ROTATE = new KeyMapping(
+            "key.citylogistics.rotate",
+            KeyConflictContext.UNIVERSAL,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_R,
+            KeyMapping.Category.MISC
+    );
+    public static final KeyMapping BUILDING_MIRROR = new KeyMapping(
+            "key.citylogistics.mirror",
+            KeyConflictContext.UNIVERSAL,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_T,
             KeyMapping.Category.MISC
     );
 }
