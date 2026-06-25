@@ -59,9 +59,8 @@ public class BlueprintPreview {
         selectedPath = "";
     }
 
-    // works, but having issues with blueprint building box detection and display.
-    // probably related to the 3 different methods of rotation we are using
-    // and the getBuildingBox function which is horribly overtuned
+    // works!
+    // real headache. im not doing this again without libraries being ported to 26.x.x
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent.AfterTranslucentBlocks event) {
         Minecraft mc = Minecraft.getInstance();
@@ -77,6 +76,9 @@ public class BlueprintPreview {
 
                 handlePositioning(poseStack, camPos, box.origin(), box.rotation(), box.mirrored());
 
+                // render block origin
+                ShapeRenderer.renderShape(poseStack, buffer, cube, 0, 0, 0, 0xFFFFFFFF, 1.0f);
+                // render building box
                 ShapeRenderer.renderShape(poseStack, buffer,
                         Shapes.box(
                                 0, 0, 0,
@@ -106,6 +108,7 @@ public class BlueprintPreview {
                             selectedBlueprint.getDimensions().getZ())
                     , 0, 0, 0, 0xFFFFFFFF, 5.0F);
 
+            // render individual block placement
             for (Map.Entry<BlockPos, BlockState> entry : selectedBlueprint.getBlockData().entrySet()) {
                 BlockPos localPos = entry.getKey();
                 BlockState state = entry.getValue();
@@ -121,9 +124,9 @@ public class BlueprintPreview {
 
     private static float getRotationDegrees(Rotation rot) {
         return switch (rot) {
-            case CLOCKWISE_90 -> 90.0f;
-            case CLOCKWISE_180 -> 180.0f;
-            case COUNTERCLOCKWISE_90 -> 270.0f;
+            case CLOCKWISE_90 -> -90.0f;
+            case CLOCKWISE_180 -> -180.0f;
+            case COUNTERCLOCKWISE_90 -> -270.0f;
             default -> 0.0f;
         };
     }
@@ -141,14 +144,18 @@ public class BlueprintPreview {
         poseStack.mulPose(Axis.YP.rotationDegrees(rotDegrees));
     }
     private static void setMirror(PoseStack poseStack, boolean isMirrored){
-        if(isMirrored) poseStack.scale(-1.0f, 1.0f, 1.0f);
+        if(isMirrored) poseStack.scale(1.0f, 1.0f, -1.0f);
     }
 
     private static void handlePositioning(PoseStack poseStack, Vec3 cameraPos, BlockPos origin, Rotation rotation, boolean mirrored){
-
         setOrigin(poseStack, cameraPos, origin);
+        // translate to middle of block
+        poseStack.translate(0.5, 0, 0.5);
+        // dont ask me why you have to rotate first, then mirror later. it just works.
         setRot(poseStack, rotation);
         setMirror(poseStack, mirrored);
+        // sets box to block edge, regardless of orientation
+        poseStack.translate(-0.5, 0, -0.5);
 
     }
 
