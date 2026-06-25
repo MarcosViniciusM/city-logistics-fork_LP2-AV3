@@ -4,6 +4,7 @@ import com.sfmf3.citylogistics.CityLogistics;
 import com.sfmf3.citylogistics.blueprint.Blueprint;
 import com.sfmf3.citylogistics.blueprint.BlueprintIO;
 import com.sfmf3.citylogistics.blueprint.BlueprintRegistry;
+import com.sfmf3.citylogistics.building.BuildingRegistry;
 import com.sfmf3.citylogistics.camera.CameraController;
 import com.sfmf3.citylogistics.network.ClientPayloadHandler;
 import com.sfmf3.citylogistics.network.payload.AddBuildingPayload;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.sfmf3.citylogistics.building.BuildingRegistry.BUILDING_REGISTRY;
 import static com.sfmf3.citylogistics.camera.CameraController.mc;
 import static com.sfmf3.citylogistics.camera.client.CityClientInfo.*;
 
@@ -54,11 +56,7 @@ public class CityBuilderScreen extends BaseScreen {
     private boolean isMirrored = false;
 
 
-    public record BuildingDefinition(String buildingId, String displayName, String category){}
-    private static final List<BuildingDefinition> BUILDING_REGISTRY = List.of(
-            new BuildingDefinition("mine", "Stone Quarry", "Extractors"),
-            new BuildingDefinition("lumbermill", "Lumbermill", "Extractors")
-    );
+
 
     public CityBuilderScreen(){
         CityClientInfo.getInformation();
@@ -308,7 +306,7 @@ public class CityBuilderScreen extends BaseScreen {
             add(scrollBar);
 
             int index = 0;
-            for (BuildingDefinition def : BUILDING_REGISTRY) {
+            for (BuildingRegistry.BuildingDefinition def : BUILDING_REGISTRY) {
                 if (def.category().equals(activeCategory)) {
                     int gridX = (index % 2) * (btnWidth + spacing);
                     int gridY = (index / 2) * (btnHeight + spacing);
@@ -419,6 +417,23 @@ public class CityBuilderScreen extends BaseScreen {
 
         @Override
         public void alignWidgets() {}
+    }
+
+    protected class BuildingInformationPanel extends Panel{
+
+        public BuildingInformationPanel(Panel panel) {
+            super(panel);
+        }
+
+        @Override
+        public void addWidgets() {
+
+        }
+
+        @Override
+        public void alignWidgets() {
+
+        }
     }
 
     protected class ResourcePanel extends Panel {

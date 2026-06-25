@@ -307,6 +307,8 @@ public class CityManager {
         City city = getCityData(level).getCities().get(anchor);
 
         for(BlockPos existingPos : city.getBuildings().keySet()){
+            if(pos.closerThan(existingPos, 2)){return existingPos; }
+            if(pos.closerThan(existingPos, 5)){ return existingPos; }
             if(pos.closerThan(existingPos, 10)){ return existingPos; }
         }
         return null;
@@ -336,4 +338,5 @@ public class CityManager {
                 boxes
         );
     }
+    //public static BuildingResponsePayload returnInfo(){}
 }
