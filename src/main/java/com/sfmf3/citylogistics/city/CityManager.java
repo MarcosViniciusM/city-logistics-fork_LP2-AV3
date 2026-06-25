@@ -89,7 +89,7 @@ public class CityManager {
             }
 
             for(AbstractBuilding building : unfinished){
-                AABB box = getBuildingBox(
+                AABB box = getRealBuildingBox(
                         building.getOrigin(),
                         building.getDimensions(),
                         building.getRotation(),
@@ -136,14 +136,18 @@ public class CityManager {
         Blueprint blueprint = BlueprintIO.loadFromFile(buildingId+"/"+path, level);
         if(blueprint == null) throw new CityOperationException("Blueprint null!");
         Vec3i dimensions = blueprint.getDimensions();
-        AABB boundingBox = getBuildingBox(origin, dimensions, rot, mirrored);
+        AABB boundingBox = getRealBuildingBox(origin, dimensions, rot, mirrored);
 
         for(BlockPos pos : city.getBuildings().keySet()){
             if(pos.closerThan(origin, 50)){
 
                 AbstractBuilding existing = city.getBuildings().get(pos);
-                AABB existingBox = getBuildingBox(pos, existing.getDimensions(), existing.getRotation(), existing.getMirrored());
-                if(boundingBox.intersects(existingBox)) throw new CityOperationException("Building intersects with another building!");
+                AABB existingBox = getRealBuildingBox(existing.getOrigin(), existing.getDimensions(), existing.getRotation(), existing.getMirrored());
+                if(boundingBox.intersects(existingBox)) throw new CityOperationException
+                        (
+                                "Building "+origin+" -- "+ boundingBox.getMinPosition()+ ", " + boundingBox.getMaxPosition() +
+                                        "intersects with building "+existing.getOrigin()+" -- " + existingBox.getMinPosition() + ", "+ existingBox.getMaxPosition()
+                        );
             }
         }
         // if no building intersects, run as normal
@@ -267,34 +271,21 @@ public class CityManager {
         }
     }
 
-    public static BlockPos getCenterBlock(BlockPos origin, Vec3i dimensions, Rotation rot, boolean mirrored){
-        AABB buildingBx = getBuildingBox(origin, dimensions, rot, mirrored);
-        return BlockPos.containing(buildingBx.getCenter());
+    public static BlockPos getRotatedBlock(BlockPos relativePos, Rotation rot, boolean mirrored){
+        BlockPos mirrorPos = mirrored ? new BlockPos(relativePos.getX(), relativePos.getY(), -relativePos.getZ()) : relativePos;
+
+        return mirrorPos.rotate(rot);
     }
 
-    public static AABB getBuildingBox(BlockPos origin, Vec3i dimensions, Rotation rot, boolean mirrored){
-        BlockPos localMax = new BlockPos(dimensions.getX() + 1, dimensions.getY() + 1, dimensions.getZ() + 1);
-        BlockPos flipped = mirrored ? new BlockPos(localMax.getX(), localMax.getY(), -localMax.getZ()) : localMax;
+    public static AABB getRealBuildingBox(BlockPos origin, Vec3i dimensions, Rotation rot, boolean mirrored){
+        BlockPos edge = getRotatedBlock(new BlockPos(dimensions).offset(-1, -1, -1), rot, mirrored);
 
-        BlockPos edge = origin.offset(flipped.rotate(rot));
-
-        double minX = Math.min(origin.getX(), edge.getX());
-        double minY = Math.min(origin.getY(), edge.getY());
-        double minZ = Math.min(origin.getZ(), edge.getZ());
-
-        double maxX = Math.max(origin.getX(), edge.getX());
-        double maxY = Math.max(origin.getY(), edge.getY());
-        double maxZ = Math.max(origin.getZ(), edge.getZ());
-
-
-        return new AABB(
-                minX, minY, minZ,
-                maxX, maxY, maxZ
-        );
+        return AABB.encapsulatingFullBlocks(origin, origin.offset(edge));
     }
 
     public static BlockPos getClosestCity(BlockPos currentPos, ServerLevel level){
         GlobalCitySavedData data = getCityData(level);
+
 
         for(BlockPos existingPos : data.getCities().keySet()){
             if(currentPos.closerThan(existingPos, 80)){ return existingPos;}
