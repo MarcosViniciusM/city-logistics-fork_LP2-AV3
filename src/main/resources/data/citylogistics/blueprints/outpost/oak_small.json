@@ -1,0 +1,385 @@
+{
+  "name": "oak_small",
+  "dimensions": [
+    9,
+    1,
+    7
+  ],
+  "blocks": {
+    "0,0,1": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "0,0,0": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "0,0,3": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "0,0,2": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "0,0,5": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "0,0,4": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "0,0,6": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "2,0,6": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "3,0,6": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "3,0,5": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "7,0,0": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "4,0,5": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "4,0,4": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "6,0,1": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "6,0,0": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "4,0,6": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "5,0,6": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "5,0,5": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "5,0,4": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "5,0,3": {
+      "Properties": {
+        "level": "0"
+      },
+      "Name": "minecraft:water"
+    },
+    "5,0,2": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "5,0,1": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "5,0,0": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "6,0,6": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "4,0,1": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "6,0,3": {
+      "Properties": {
+        "level": "0"
+      },
+      "Name": "minecraft:water"
+    },
+    "4,0,0": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "6,0,2": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "4,0,3": {
+      "Properties": {
+        "level": "0"
+      },
+      "Name": "minecraft:water"
+    },
+    "6,0,5": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "4,0,2": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "6,0,4": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "3,0,0": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "7,0,4": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "7,0,3": {
+      "Properties": {
+        "level": "0"
+      },
+      "Name": "minecraft:water"
+    },
+    "7,0,2": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "7,0,1": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "3,0,4": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "3,0,3": {
+      "Properties": {
+        "level": "0"
+      },
+      "Name": "minecraft:water"
+    },
+    "3,0,2": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "7,0,6": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "3,0,1": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "7,0,5": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "2,0,3": {
+      "Properties": {
+        "level": "0"
+      },
+      "Name": "minecraft:water"
+    },
+    "8,0,1": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "2,0,2": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "8,0,0": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "2,0,5": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "8,0,3": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "2,0,4": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "8,0,2": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "8,0,5": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "8,0,4": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "2,0,1": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "2,0,0": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "8,0,6": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "1,0,6": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    },
+    "1,0,5": {
+      "Name": "minecraft:dirt"
+    },
+    "1,0,4": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "1,0,3": {
+      "Properties": {
+        "level": "0"
+      },
+      "Name": "minecraft:water"
+    },
+    "1,0,2": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "1,0,1": {
+      "Properties": {
+        "moisture": "7"
+      },
+      "Name": "minecraft:farmland"
+    },
+    "1,0,0": {
+      "Properties": {
+        "axis": "y"
+      },
+      "Name": "minecraft:oak_log"
+    }
+  }
+}
