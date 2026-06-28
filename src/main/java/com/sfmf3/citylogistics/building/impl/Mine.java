@@ -11,7 +11,6 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Rotation;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class Mine extends AbstractBuilding implements IExtraction {

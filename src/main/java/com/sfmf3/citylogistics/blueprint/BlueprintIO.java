@@ -4,26 +4,15 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
 import com.mojang.serialization.JsonOps;
 import com.sfmf3.citylogistics.CityLogistics;
-import com.sfmf3.citylogistics.network.CityOperationException;
-import net.minecraft.core.Vec3i;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.world.entity.player.Input;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.LevelResource;
-import net.neoforged.fml.ModList;
 
-
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.Reader;
 
 public class BlueprintIO {
     private static final Gson GSON = new GsonBuilder()

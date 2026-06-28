@@ -3,21 +3,15 @@ package com.sfmf3.citylogistics.network;
 import com.sfmf3.citylogistics.CityLogistics;
 import com.sfmf3.citylogistics.blueprint.Blueprint;
 import com.sfmf3.citylogistics.blueprint.BlueprintIO;
-import com.sfmf3.citylogistics.building.AbstractBuilding;
-import com.sfmf3.citylogistics.camera.client.CityClientInfo;
 import com.sfmf3.citylogistics.city.City;
 import com.sfmf3.citylogistics.city.CityManager;
 import com.sfmf3.citylogistics.network.payload.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ServerPayloadHandler {
     public static void handleAddBuilding(final AddBuildingPayload payload, final IPayloadContext context){

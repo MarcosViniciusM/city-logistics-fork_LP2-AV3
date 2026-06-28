@@ -1,10 +1,13 @@
 package com.sfmf3.citylogistics.camera;
 
+import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.sfmf3.citylogistics.camera.client.CameraEntity;
-import com.sfmf3.citylogistics.camera.client.CityBuilderScreen;
+import com.sfmf3.citylogistics.camera.client.CityInfoManager;
+import com.sfmf3.citylogistics.camera.client.ui.CityScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.KeyboardInput;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.ApiStatus;
@@ -58,10 +61,12 @@ public class CameraController {
         if(mc.player != null) cameraInstance.copyPosition(mc.player);
         cameraInstance.spawn();
         mc.setCameraEntity(cameraInstance);
-        new CityBuilderScreen().openGui();
+        CityInfoManager.getInformation();
+        mc.setScreen(new CityScreen(mc.player));
     }
 
     private static void disableCamera(){
+
         mc.setCameraEntity(mc.player);
         cameraInstance.despawn();
         // removes input from camera
@@ -72,9 +77,11 @@ public class CameraController {
         if(mc.player != null){
             mc.player.input = new KeyboardInput(mc.options);
         }
+
         if(mc.screen != null){
             mc.setScreen(null);
         }
+
     }
 
     public static void anchorToggle(){
@@ -85,23 +92,16 @@ public class CameraController {
             enableAnchor();
         }
         anchorActive = !anchorActive;
-
-        if(!anchorActive){
-            mc.mouseHandler.grabMouse();
-            toggle();
-        }
     }
 
     private static void enableAnchor(){
         mc.mouseHandler.releaseMouse();
         anchor = new AnchorHandler(32.0D);
-
     }
 
     private static void disableAnchor(){
         mc.mouseHandler.grabMouse();
         anchor = null;
-
     }
 
     public static void orbitPoint(Vec3 point){

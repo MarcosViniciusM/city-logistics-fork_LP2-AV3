@@ -1,19 +1,16 @@
 package com.sfmf3.citylogistics.camera.client;
 
+import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.sfmf3.citylogistics.CityLogistics;
 import com.sfmf3.citylogistics.blueprint.Blueprint;
-import com.sfmf3.citylogistics.blueprint.BlueprintIO;
-import com.sfmf3.citylogistics.city.CityManager;
-import com.sfmf3.citylogistics.network.CityOperationException;
+import com.sfmf3.citylogistics.camera.client.ui.CityScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -30,34 +27,11 @@ import java.util.Map;
 @EventBusSubscriber(modid = CityLogistics.MODID, value = Dist.CLIENT)
 public class BlueprintPreview {
 
-    private static boolean active = false;
-    private static boolean selected = false;
+
     private static boolean buildings = false;
 
-
-    public static BlockPos selectedBlock = null;
-    public static Blueprint selectedBlueprint = null;
-    public static String selectedBuildingId = "";
-    public static String selectedPath = "";
-    public static Rotation selectedRotation = Rotation.NONE;
-    public static boolean isMirrored = false;
-
-    public static void update(BlockPos pos, String id, String path, Rotation rot, boolean mirror) {
-        selectedBlock = pos;
-        selectedBuildingId = id;
-        selectedPath = path;
-        selectedRotation = rot;
-        isMirrored = mirror;
-    }
-
-    public static void updateBlueprint(Blueprint blueprint){
-        selectedBlueprint = blueprint;
-    }
-
-    public static void clear() {
-        selectedBlock = null;
-        selectedPath = "";
-    }
+    private static boolean blueprintBox = false;
+    private static boolean blueprintBlocks = false;
 
     // works!
     // real headache. im not doing this again without libraries being ported to 26.x.x
@@ -66,12 +40,22 @@ public class BlueprintPreview {
         Minecraft mc = Minecraft.getInstance();
         Vec3 camPos = mc.gameRenderer.getMainCamera().position();
 
+
+        if(mc.screen instanceof ModularUIScreen){
+            if(CityScreen.activeContext == null && CityInfoManager.allBuildings == null){
+                return;
+            }
+        }
+        else return;
+
         PoseStack poseStack = event.getPoseStack();
         VertexConsumer buffer = mc.renderBuffers().bufferSource().getBuffer(RenderTypes.lines());
         VoxelShape cube = Shapes.block();
+        var activeContext = CityScreen.activeContext;
 
+        // render current city buildings
         if(buildings){
-            for(CityClientInfo.BuildingBox box : CityClientInfo.allBuildings){
+            for(CityInfoManager.BuildingBox box : CityInfoManager.allBuildings){
                 poseStack.pushPose();
 
                 handlePositioning(poseStack, camPos, box.origin(), box.rotation(), box.mirrored());
@@ -91,29 +75,38 @@ public class BlueprintPreview {
                 poseStack.popPose();
             }
         }
-        if(selected){
+
+        // renders current blueprint placement context
+        if(activeContext != null){
+
+            if (activeContext.selectedBlock == null) return;
             poseStack.pushPose();
-            if (selectedBlock == null || selectedPath == null || selectedPath.isEmpty()) return;
-            if (mc.level == null || mc.player == null) return;
-            if(selectedBlueprint == null) return;
 
-            handlePositioning(poseStack, camPos, selectedBlock, selectedRotation, isMirrored);
+            handlePositioning(poseStack, camPos, activeContext.selectedBlock, activeContext.selectedRotation, activeContext.isMirrored);
 
+            // render selected block
+            ShapeRenderer.renderShape(poseStack, buffer, cube, 0, 0, 0, 0xFFFFFFFF, 1.0f);
+
+            if(activeContext.blueprint == null) return;
             // render building bounding box
-            ShapeRenderer.renderShape(poseStack, buffer,
-                    Shapes.box(
-                            0, 0, 0,
-                            selectedBlueprint.getDimensions().getX(),
-                            selectedBlueprint.getDimensions().getY(),
-                            selectedBlueprint.getDimensions().getZ())
-                    , 0, 0, 0, 0xFFFFFFFF, 5.0F);
+            if(blueprintBox) {
+                ShapeRenderer.renderShape(poseStack, buffer,
+                        Shapes.box(
+                                0, 0, 0,
+                                activeContext.blueprint.getDimensions().getX(),
+                                activeContext.blueprint.getDimensions().getY(),
+                                activeContext.blueprint.getDimensions().getZ())
+                        , 0, 0, 0, 0xFFFFFFFF, 5.0F);
+            }
 
             // render individual block placement
-            for (Map.Entry<BlockPos, BlockState> entry : selectedBlueprint.getBlockData().entrySet()) {
-                BlockPos localPos = entry.getKey();
-                BlockState state = entry.getValue();
-                if (!state.isAir()) {
-                    ShapeRenderer.renderShape(poseStack, buffer, cube, localPos.getX(), localPos.getY(), localPos.getZ(), 0xFFFF0000, 1.0f);
+            if(blueprintBlocks) {
+                for (Map.Entry<BlockPos, BlockState> entry : activeContext.blueprint.getBlockData().entrySet()) {
+                    BlockPos localPos = entry.getKey();
+                    BlockState state = entry.getValue();
+                    if (!state.isAir()) {
+                        ShapeRenderer.renderShape(poseStack, buffer, cube, localPos.getX(), localPos.getY(), localPos.getZ(), 0xFFFF0000, 1.0f);
+                    }
                 }
             }
             poseStack.popPose();
@@ -159,12 +152,11 @@ public class BlueprintPreview {
 
     }
 
-    public static void toggleActive(){ active = !active;}
-    public static void setActive(boolean state){ active = state;}
-
-    public static void toggleSelected(){selected = !selected; }
-    public static void setSelected(boolean state){ selected = state; }
-
-    public static void toggleBuildings(){buildings = !buildings;}
     public static void setBuildings(boolean state) {buildings = state;}
+    public static void setBlueprintBox(boolean state) {
+        blueprintBox = state;
+    }
+    public static void setBlueprintBlocks(boolean state) {
+        blueprintBlocks = state;
+    }
 }

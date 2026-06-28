@@ -1,8 +1,6 @@
 package com.sfmf3.citylogistics.network.payload;
 
-import com.mojang.serialization.Codec;
 import com.sfmf3.citylogistics.CityLogistics;
-import com.sfmf3.citylogistics.blueprint.Blueprint;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;

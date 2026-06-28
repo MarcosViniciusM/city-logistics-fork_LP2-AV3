@@ -1,7 +1,7 @@
 package com.sfmf3.citylogistics.network.payload;
 
 import com.sfmf3.citylogistics.CityLogistics;
-import com.sfmf3.citylogistics.camera.client.CityClientInfo;
+import com.sfmf3.citylogistics.camera.client.CityInfoManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -19,7 +19,7 @@ public record CityResponsePayload(
         Map<String, Integer> stockCurrent,
         Map<String, Integer> stockLimits,
         int pop, int popcap,
-        List<CityClientInfo.BuildingBox> buildings
+        List<CityInfoManager.BuildingBox> buildings
 ) implements CustomPacketPayload {
     public static final Type<CityResponsePayload> TYPE = new Type<>(Identifier.fromNamespaceAndPath(CityLogistics.MODID, "city_response"));
 
@@ -29,7 +29,7 @@ public record CityResponsePayload(
             ByteBufCodecs.map(HashMap::new, ByteBufCodecs.STRING_UTF8, ByteBufCodecs.INT), CityResponsePayload::stockLimits,
             ByteBufCodecs.INT, CityResponsePayload::pop,
             ByteBufCodecs.INT, CityResponsePayload::popcap,
-            CityClientInfo.BuildingBox.STREAM_CODEC.apply(ByteBufCodecs.list()), CityResponsePayload::buildings,
+            CityInfoManager.BuildingBox.STREAM_CODEC.apply(ByteBufCodecs.list()), CityResponsePayload::buildings,
             CityResponsePayload::new
     );
 

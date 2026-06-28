@@ -4,7 +4,6 @@ import com.sfmf3.citylogistics.CityLogistics;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.neoforged.fml.ModList;
 
 import java.util.ArrayList;
 import java.util.HashMap;

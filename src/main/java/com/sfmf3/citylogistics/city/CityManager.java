@@ -8,13 +8,12 @@ import com.sfmf3.citylogistics.building.BuildingState;
 import com.sfmf3.citylogistics.building.behavior.IExtraction;
 import com.sfmf3.citylogistics.building.behavior.IHousing;
 import com.sfmf3.citylogistics.building.behavior.IProduction;
-import com.sfmf3.citylogistics.camera.client.CityClientInfo;
+import com.sfmf3.citylogistics.camera.client.CityInfoManager;
 import com.sfmf3.citylogistics.network.CityOperationException;
 import com.sfmf3.citylogistics.network.payload.CityResponsePayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.phys.AABB;
 
@@ -310,9 +309,9 @@ public class CityManager {
         City city = getCityData(level).getCities().get(anchor);
         if(!city.canEdit(playerUUID)) throw new CityOperationException("Player has unauthorized access!");
 
-        List<CityClientInfo.BuildingBox> boxes = new ArrayList<>();
+        List<CityInfoManager.BuildingBox> boxes = new ArrayList<>();
         for (AbstractBuilding b : city.getBuildings().values()) {
-            boxes.add(new CityClientInfo.BuildingBox(
+            boxes.add(new CityInfoManager.BuildingBox(
                     b.getOrigin(),
                     b.getDimensions(),
                     b.getRotation(),

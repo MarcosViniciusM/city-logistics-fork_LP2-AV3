@@ -15,7 +15,8 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
 import org.lwjgl.glfw.GLFW;
 
-import static com.sfmf3.citylogistics.camera.CameraController.*;
+import static com.sfmf3.citylogistics.camera.CameraController.isActive;
+import static com.sfmf3.citylogistics.camera.CameraController.mc;
 
 @EventBusSubscriber(modid = CityLogistics.MODID, value = Dist.CLIENT)
 public class CameraClientEvents {

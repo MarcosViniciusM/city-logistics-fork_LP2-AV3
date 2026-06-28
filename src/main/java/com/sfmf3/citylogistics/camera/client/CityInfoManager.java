@@ -1,15 +1,19 @@
 package com.sfmf3.citylogistics.camera.client;
 
+import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.sfmf3.citylogistics.CityLogistics;
 import com.sfmf3.citylogistics.blueprint.Blueprint;
+import com.sfmf3.citylogistics.blueprint.BlueprintIO;
+import com.sfmf3.citylogistics.blueprint.BlueprintRegistry;
 import com.sfmf3.citylogistics.building.BuildingState;
+import com.sfmf3.citylogistics.camera.client.ui.CityScreen;
 import com.sfmf3.citylogistics.network.payload.BlueprintResponsePayload;
 import com.sfmf3.citylogistics.network.payload.CityRequestPayload;
 import com.sfmf3.citylogistics.network.payload.CityResponsePayload;
-import dev.ftb.mods.ftblibrary.client.gui.widget.ScreenWrapper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.level.block.Rotation;
@@ -23,7 +27,7 @@ import java.util.Map;
 import static com.sfmf3.citylogistics.camera.CameraController.mc;
 
 @EventBusSubscriber(modid = CityLogistics.MODID, value = Dist.CLIENT)
-public class CityClientInfo {
+public class CityInfoManager {
     // needed for most city operations.
     public static BlockPos cityAnchor = null;
 
@@ -35,29 +39,16 @@ public class CityClientInfo {
     public static List<BuildingBox> allBuildings = new ArrayList<>();
 
 
-    // blueprint. gotten only when going to place buildings
-    public static Blueprint selectedBlueprint = null;
-
     // gotten only when selecting a specific building
     public static SelectedBuildingDetails selectedBuildingDetails = null;
 
-    public static void setBlueprintInfo(BlueprintResponsePayload payload) {
-        selectedBlueprint = payload.blueprint();
-        if(mc.screen instanceof ScreenWrapper wrapper){
-            if(wrapper.getGui() instanceof CityBuilderScreen screen){
-                screen.updateBlueprint();
-                screen.updatePreviewState();
-            }
-        }
-    }
 
     public record BuildingBox(
             BlockPos origin,
             Vec3i dimensions,
             Rotation rotation,
             boolean mirrored,
-            String buildingId)
-    {
+            String buildingId) {
         public static final StreamCodec<RegistryFriendlyByteBuf, BuildingBox> STREAM_CODEC = StreamCodec.composite(
                 BlockPos.STREAM_CODEC, BuildingBox::origin,
                 Vec3i.STREAM_CODEC, BuildingBox::dimensions,
@@ -66,12 +57,18 @@ public class CityClientInfo {
                 ByteBufCodecs.STRING_UTF8, BuildingBox::buildingId,
                 BuildingBox::new
         );
+        public static final StreamCodec<RegistryFriendlyByteBuf, List<BuildingBox>> LIST_CODEC =
+                BuildingBox.STREAM_CODEC.apply(ByteBufCodecs.list());
     }
 
-    public record SelectedBuildingDetails(String buildingId, String blueprintPath, BuildingState state, Map<String, String> details){}
+    public record SelectedBuildingDetails(
+            String buildingId,
+            String blueprintPath,
+            BuildingState state,
+            Map<String, String> details) { }
 
     // runs when CityBuilderScreen is initialized
-    public static void getInformation(){
+    public static void getInformation() {
         mc.player.connection.send(new CityRequestPayload(mc.player.blockPosition()));
     }
 
@@ -84,11 +81,29 @@ public class CityClientInfo {
         stockCurrent = payload.stockCurrent();
         stockLimits = payload.stockLimits();
         allBuildings = payload.buildings();
+        BlueprintPreview.setBuildings(true);
+    }
 
-        if(mc.screen instanceof ScreenWrapper wrapper){
-            if(wrapper.getGui() instanceof CityBuilderScreen screen){
-                screen.refreshWidgets();
-            }
+    public static class BuildingPlacementContext {
+        public final String buildingId;
+        public final List<String> availablePaths;
+
+        public String selectedPath;
+        public BlockPos selectedBlock = BlockPos.ZERO;
+        public Rotation selectedRotation = Rotation.NONE;
+        public boolean isMirrored = false;
+        public Blueprint blueprint = null;
+
+        public BuildingPlacementContext(String buildingId){
+            this.buildingId = buildingId;
+            this.availablePaths = BlueprintRegistry.getPaths(buildingId);
+            this.selectedPath = this.availablePaths.isEmpty() ? "" : this.availablePaths.getFirst();
+        }
+
+        public void updateBlueprint(BlueprintResponsePayload payload){
+            this.blueprint = payload.blueprint();
         }
     }
+
 }
+

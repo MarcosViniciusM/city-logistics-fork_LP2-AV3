@@ -1,6 +1,5 @@
 package com.sfmf3.citylogistics.network.payload;
 
-import com.mojang.serialization.Codec;
 import com.sfmf3.citylogistics.CityLogistics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;

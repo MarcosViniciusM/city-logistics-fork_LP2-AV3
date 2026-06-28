@@ -38,6 +38,11 @@ public class BuildingRegistry {
         public interface TriFunction<A, B, C, D, E, F, R> { R apply (A a, B b, C c, D d, E e, F f); }
     }
 
+    public static final String[] CATEGORIES = {
+            "Primary", "Housing",
+            "Extractors", "Producers",
+            "Warehouses", "Misc."};
+
     public record BuildingDefinition(String buildingId, String displayName, String category){}
     public static final List<BuildingDefinition> BUILDING_REGISTRY = List.of(
             new BuildingDefinition("mine", "Stone Quarry", "Extractors"),

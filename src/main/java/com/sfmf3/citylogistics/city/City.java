@@ -13,11 +13,15 @@ public class City {
     private List<UUID> editors;
     private BlockPos anchor;
 
+    // also storing data like this is... inefficient to say the least
+    // next time i'm turning this into its own List<CityResource>
+    // w/ city resource having like, 2 ints 1 string and its own add/remove clamp methods.
     private Map<String, Integer> stockpileMax;
     private Map<String, Integer> stockpileCurrent;
-    private Map<BlockPos, AbstractBuilding> buildings;
     private int population;
     private int populationCap;
+
+    private Map<BlockPos, AbstractBuilding> buildings;
 
     // called by creating new city from block
     public City(String name, BlockPos anchor, UUID owner){
