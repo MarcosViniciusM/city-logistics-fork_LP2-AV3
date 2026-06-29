@@ -3,19 +3,22 @@ package com.sfmf3.citylogistics.city;
 import com.sfmf3.citylogistics.blueprint.Blueprint;
 import com.sfmf3.citylogistics.blueprint.BlueprintIO;
 import com.sfmf3.citylogistics.building.AbstractBuilding;
+import com.sfmf3.citylogistics.building.BuildingBox;
 import com.sfmf3.citylogistics.building.BuildingRegistry;
 import com.sfmf3.citylogistics.building.BuildingState;
 import com.sfmf3.citylogistics.building.behavior.IExtraction;
 import com.sfmf3.citylogistics.building.behavior.IHousing;
 import com.sfmf3.citylogistics.building.behavior.IProduction;
-import com.sfmf3.citylogistics.camera.client.CityInfoManager;
 import com.sfmf3.citylogistics.network.CityOperationException;
+import com.sfmf3.citylogistics.network.payload.BuildingRequestPayload;
+import com.sfmf3.citylogistics.network.payload.BuildingResponsePayload;
 import com.sfmf3.citylogistics.network.payload.CityResponsePayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.phys.AABB;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.*;
 
@@ -293,13 +296,12 @@ public class CityManager {
         return null;
     }
 
-    public static BlockPos getClosestBuilding(BlockPos pos, BlockPos anchor, ServerLevel level){
-        City city = getCityData(level).getCities().get(anchor);
-
+    public static BlockPos getClosestBuilding(City city, BlockPos pos, ServerLevel level){
         for(BlockPos existingPos : city.getBuildings().keySet()){
             if(pos.closerThan(existingPos, 2)){return existingPos; }
             if(pos.closerThan(existingPos, 5)){ return existingPos; }
             if(pos.closerThan(existingPos, 10)){ return existingPos; }
+            if(pos.closerThan(existingPos, 15)){ return existingPos; }
         }
         return null;
     }
@@ -309,9 +311,9 @@ public class CityManager {
         City city = getCityData(level).getCities().get(anchor);
         if(!city.canEdit(playerUUID)) throw new CityOperationException("Player has unauthorized access!");
 
-        List<CityInfoManager.BuildingBox> boxes = new ArrayList<>();
+        List<BuildingBox> boxes = new ArrayList<>();
         for (AbstractBuilding b : city.getBuildings().values()) {
-            boxes.add(new CityInfoManager.BuildingBox(
+            boxes.add(new BuildingBox(
                     b.getOrigin(),
                     b.getDimensions(),
                     b.getRotation(),
@@ -328,5 +330,14 @@ public class CityManager {
                 boxes
         );
     }
-    //public static BuildingResponsePayload returnInfo(){}
+    public static BuildingResponsePayload returnInfo(BuildingRequestPayload payload, IPayloadContext context, ServerLevel level){
+        City city = getCityData(level).getCities().get(payload.anchor());
+        if(!city.canEdit(context.player().getUUID())) throw new CityOperationException("Player has unauthorized access!");
+
+        AbstractBuilding building = city.getBuildings().get(CityManager.getClosestBuilding(city, payload.selection(), level));
+        if(building == null) throw new CityOperationException("Couldn't find building!");
+
+        return new BuildingResponsePayload(building.getInformation());
+
+    }
 }

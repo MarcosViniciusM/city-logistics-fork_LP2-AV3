@@ -10,6 +10,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.utils.IModularUIProvider;
 import com.sfmf3.citylogistics.CityLogistics;
+import com.sfmf3.citylogistics.building.BuildingInformation;
 import com.sfmf3.citylogistics.building.BuildingRegistry;
 import com.sfmf3.citylogistics.camera.CameraController;
 import com.sfmf3.citylogistics.camera.client.BlueprintPreview;
@@ -18,6 +19,7 @@ import com.sfmf3.citylogistics.camera.client.ModKeys;
 import com.sfmf3.citylogistics.network.CityOperationException;
 import com.sfmf3.citylogistics.network.payload.AddBuildingPayload;
 import com.sfmf3.citylogistics.network.payload.BlueprintRequestPayload;
+import com.sfmf3.citylogistics.network.payload.BuildingRequestPayload;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -42,6 +44,7 @@ public class CityScreen extends ModularUIScreen {
 
     private ModularUI ui;
     public static CityInfoManager.BuildingPlacementContext activeContext = null;
+    public static BuildingInformation activeSelection = null;
 
     public CityScreen(Player player){
         var base = new UIElement(){
@@ -188,6 +191,10 @@ public class CityScreen extends ModularUIScreen {
         infoPlaceholder.addChild(root);
     }
 
+    private void populateViewer(UIElement infoPlaceholder){
+
+    }
+
     @Override
     public boolean mouseClicked(MouseButtonEvent button, boolean doubleClick){
 
@@ -212,6 +219,14 @@ public class CityScreen extends ModularUIScreen {
                 }
                 else { activeContext.selectedBlock = null; }
                 return true;
+            }
+            else{
+                if(!doubleClick){
+                    HitResult hit = mc.getCameraEntity().pick(64, 1.0F, false);
+                    if (hit.getType() == HitResult.Type.BLOCK) {
+                        mc.player.connection.send(new BuildingRequestPayload(CityInfoManager.cityAnchor,((BlockHitResult) hit).getBlockPos()));
+                    }
+                }
             }
 
         }

@@ -3,6 +3,10 @@ package com.sfmf3.citylogistics.building;
 import com.mojang.serialization.Codec;
 import com.sfmf3.citylogistics.blueprint.Blueprint;
 import com.sfmf3.citylogistics.blueprint.BlueprintIO;
+import com.sfmf3.citylogistics.building.behavior.IExtraction;
+import com.sfmf3.citylogistics.building.behavior.IHousing;
+import com.sfmf3.citylogistics.building.behavior.IProduction;
+import com.sfmf3.citylogistics.building.behavior.IStorage;
 import com.sfmf3.citylogistics.city.City;
 import com.sfmf3.citylogistics.city.CityManager;
 import net.minecraft.core.BlockPos;
@@ -157,6 +161,45 @@ public abstract class AbstractBuilding {
         currentBuildingY = null;
     }
 
+    public BuildingBox getBox(){
+        return new BuildingBox(
+                getOrigin(),
+                getDimensions(),
+                getRotation(),
+                getMirrored(),
+                getBuildingID()
+        );
+    }
+
+    // this is a horrible implementation but whatever
+    public BuildingInformation getInformation(){
+        var info = new BuildingInformation();
+        info.box = getBox();
+        info.buildingId = this.getBuildingID();
+        info.state = this.state;
+
+        if(this instanceof IExtraction){
+            info.input.put(
+                    ((IExtraction) this).getExtractedResource(),
+                    (int) (((IExtraction) this).getExtractionWorkerRate() * ((IExtraction) this).getExtractionWorkerCapacity())
+            );
+            info.workers += ((IExtraction) this).getExtractionWorkerCapacity();
+        }
+        if(this instanceof IProduction){
+            info.input.putAll(((IProduction) this).getProducedMaterials());
+            info.workers += ((IProduction) this).getProductionWorkerCapacity();
+        }
+        if(this instanceof IStorage storage){
+            for(String resource : storage.getAllowedResources()){
+                info.storage.put(resource, storage.getMaxStorage());
+            }
+        }
+        if(this instanceof IHousing){
+            info.housing += ((IHousing) this).getHousingCapacity();
+        }
+
+        return info;
+    }
 
 
     public static final Codec<AbstractBuilding> CODEC = Codec.STRING.dispatch(

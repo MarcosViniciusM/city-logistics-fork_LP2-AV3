@@ -1,21 +1,15 @@
 package com.sfmf3.citylogistics.camera.client;
 
-import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.sfmf3.citylogistics.CityLogistics;
 import com.sfmf3.citylogistics.blueprint.Blueprint;
-import com.sfmf3.citylogistics.blueprint.BlueprintIO;
 import com.sfmf3.citylogistics.blueprint.BlueprintRegistry;
+import com.sfmf3.citylogistics.building.BuildingBox;
+import com.sfmf3.citylogistics.building.BuildingInformation;
 import com.sfmf3.citylogistics.building.BuildingState;
-import com.sfmf3.citylogistics.camera.client.ui.CityScreen;
 import com.sfmf3.citylogistics.network.payload.BlueprintResponsePayload;
 import com.sfmf3.citylogistics.network.payload.CityRequestPayload;
 import com.sfmf3.citylogistics.network.payload.CityResponsePayload;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.level.block.Rotation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -39,33 +33,6 @@ public class CityInfoManager {
     public static List<BuildingBox> allBuildings = new ArrayList<>();
 
 
-    // gotten only when selecting a specific building
-    public static SelectedBuildingDetails selectedBuildingDetails = null;
-
-
-    public record BuildingBox(
-            BlockPos origin,
-            Vec3i dimensions,
-            Rotation rotation,
-            boolean mirrored,
-            String buildingId) {
-        public static final StreamCodec<RegistryFriendlyByteBuf, BuildingBox> STREAM_CODEC = StreamCodec.composite(
-                BlockPos.STREAM_CODEC, BuildingBox::origin,
-                Vec3i.STREAM_CODEC, BuildingBox::dimensions,
-                Rotation.STREAM_CODEC, BuildingBox::rotation,
-                ByteBufCodecs.BOOL, BuildingBox::mirrored,
-                ByteBufCodecs.STRING_UTF8, BuildingBox::buildingId,
-                BuildingBox::new
-        );
-        public static final StreamCodec<RegistryFriendlyByteBuf, List<BuildingBox>> LIST_CODEC =
-                BuildingBox.STREAM_CODEC.apply(ByteBufCodecs.list());
-    }
-
-    public record SelectedBuildingDetails(
-            String buildingId,
-            String blueprintPath,
-            BuildingState state,
-            Map<String, String> details) { }
 
     // runs when CityBuilderScreen is initialized
     public static void getInformation() {

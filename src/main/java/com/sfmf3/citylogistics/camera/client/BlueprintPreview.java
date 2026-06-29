@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.sfmf3.citylogistics.CityLogistics;
-import com.sfmf3.citylogistics.blueprint.Blueprint;
+import com.sfmf3.citylogistics.building.BuildingBox;
 import com.sfmf3.citylogistics.camera.client.ui.CityScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShapeRenderer;
@@ -55,7 +55,7 @@ public class BlueprintPreview {
 
         // render current city buildings
         if(buildings){
-            for(CityInfoManager.BuildingBox box : CityInfoManager.allBuildings){
+            for(BuildingBox box : CityInfoManager.allBuildings){
                 poseStack.pushPose();
 
                 handlePositioning(poseStack, camPos, box.origin(), box.rotation(), box.mirrored());

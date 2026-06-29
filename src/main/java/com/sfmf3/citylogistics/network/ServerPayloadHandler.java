@@ -131,4 +131,20 @@ public class ServerPayloadHandler {
             }
         });
     }
+
+    public static void handleBuildingRequest(final BuildingRequestPayload payload, final IPayloadContext context){
+        context.enqueueWork(() ->{
+            if(context.player() instanceof ServerPlayer serverPlayer){
+                try {
+                    ServerLevel level = serverPlayer.level();
+
+                    context.reply(CityManager.returnInfo(payload, context, level));
+
+                }catch (Exception e){
+                    serverPlayer.sendSystemMessage(Component.literal("Error" + e.getMessage()).withStyle(ChatFormatting.DARK_RED));
+                    CityLogistics.LOGGER.error("Failed to handle building request for " + serverPlayer.getName());
+                }
+            }
+        });
+    }
 }

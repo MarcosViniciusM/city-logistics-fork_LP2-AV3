@@ -4,6 +4,7 @@ import com.sfmf3.citylogistics.CityLogistics;
 import com.sfmf3.citylogistics.camera.client.CityInfoManager;
 import com.sfmf3.citylogistics.camera.client.ui.CityScreen;
 import com.sfmf3.citylogistics.network.payload.BlueprintResponsePayload;
+import com.sfmf3.citylogistics.network.payload.BuildingResponsePayload;
 import com.sfmf3.citylogistics.network.payload.CityResponsePayload;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -23,6 +24,20 @@ public class ClientPayloadHandler {
             } catch (Exception e){
                 context.player().sendSystemMessage(Component.literal(("Error: " + e.getMessage())).withStyle(ChatFormatting.DARK_RED));
                 CityLogistics.LOGGER.error("Failed to handle blueprint response for " +context.player().getName());
+            }
+        });
+    }
+
+    public static void handleBuildingResponse(final BuildingResponsePayload payload, final IPayloadContext context){
+        context.enqueueWork(() -> {
+            try {
+                CityScreen.activeSelection = payload.information();
+                if(CityScreen.activeSelection != null) context.player().sendSystemMessage(Component.literal("Successfully fetched building information!"));
+                else context.player().sendSystemMessage(Component.literal("Returned null??"));
+
+            } catch (Exception e) {
+                context.player().sendSystemMessage(Component.literal(("Error: " + e.getMessage())).withStyle(ChatFormatting.DARK_RED));
+                CityLogistics.LOGGER.error("Failed to handle building response for " +context.player().getName());
             }
         });
     }
