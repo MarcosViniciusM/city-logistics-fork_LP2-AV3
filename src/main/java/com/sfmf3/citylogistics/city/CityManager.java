@@ -296,14 +296,13 @@ public class CityManager {
         return null;
     }
 
+    // this is just bad form ngl. has some weird interactions when building are too close
+    // but it'll work for now
     public static BlockPos getClosestBuilding(City city, BlockPos pos, ServerLevel level){
-        for(BlockPos existingPos : city.getBuildings().keySet()){
-            if(pos.closerThan(existingPos, 2)){return existingPos; }
-            if(pos.closerThan(existingPos, 5)){ return existingPos; }
-            if(pos.closerThan(existingPos, 10)){ return existingPos; }
-            if(pos.closerThan(existingPos, 15)){ return existingPos; }
-        }
-        return null;
+        return city.getBuildings().keySet().stream()
+                .filter(existingPos -> pos.closerThan(existingPos, 15))
+                .min(Comparator.comparingDouble(pos::distSqr))
+                .orElse(null);
     }
 
     public static CityResponsePayload returnInfo(BlockPos anchor, UUID playerUUID, ServerLevel level){
@@ -335,7 +334,14 @@ public class CityManager {
         if(!city.canEdit(context.player().getUUID())) throw new CityOperationException("Player has unauthorized access!");
 
         AbstractBuilding building = city.getBuildings().get(CityManager.getClosestBuilding(city, payload.selection(), level));
-        if(building == null) throw new CityOperationException("Couldn't find building!");
+
+        var box = getRealBuildingBox(
+                building.getOrigin(),
+                building.getDimensions(),
+                building.getRotation(),
+                building.getMirrored()).inflate(3);
+
+        if(!box.contains(payload.selection().getCenter())) throw new CityOperationException("Couldn't find building!");
 
         return new BuildingResponsePayload(building.getInformation());
 
