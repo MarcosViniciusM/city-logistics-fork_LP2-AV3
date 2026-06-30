@@ -31,8 +31,10 @@ public class ClientPayloadHandler {
     public static void handleBuildingResponse(final BuildingResponsePayload payload, final IPayloadContext context){
         context.enqueueWork(() -> {
             try {
-                CityScreen.activeSelection = payload.information();
-                if(CityScreen.activeSelection != null) context.player().sendSystemMessage(Component.literal("Successfully fetched building information!"));
+                CityScreen.updateSelection(payload.information());
+                if(CityScreen.activeSelection != null){
+                    context.player().sendSystemMessage(Component.literal("Successfully fetched building information!"));
+                }
                 else context.player().sendSystemMessage(Component.literal("Returned null??"));
 
             } catch (Exception e) {

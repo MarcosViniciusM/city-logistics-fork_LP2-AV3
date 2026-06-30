@@ -200,14 +200,29 @@ public class CityScreen extends ModularUIScreen {
 
         buildingInfoPlaceholder.clearAllChildren();
 
-        var infoUi = loadTemplate("layouts/building_info_template.ui.nbt");
+        //var infoUi = loadTemplate("layouts/building_info_template.ui.nbt");
+        var infoUi = loadTemplate("layouts/building_constructor_template.ui.nbt");
+
         var root = infoUi.select("#root").findFirst().orElse(null);
 
+        root.select("#tooltip_name").findFirst().ifPresent(widget -> {
+            if(widget instanceof Label label){
+                label.setValue(Component.literal(activeSelection.getBuildingId()));
+            }
+        });
 
 
 
 
         buildingInfoPlaceholder.addChild(root);
+    }
+
+    public static void updateSelection(BuildingInformation information) {
+        activeSelection = information;
+        if(information == null) return;
+        if(mc.screen instanceof CityScreen screen){
+            screen.populateViewer();
+        }
     }
 
     @Override
