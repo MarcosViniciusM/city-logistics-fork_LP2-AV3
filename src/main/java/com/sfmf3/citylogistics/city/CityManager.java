@@ -1,5 +1,6 @@
 package com.sfmf3.citylogistics.city;
 
+import com.sfmf3.citylogistics.CityLogistics;
 import com.sfmf3.citylogistics.blueprint.Blueprint;
 import com.sfmf3.citylogistics.blueprint.BlueprintIO;
 import com.sfmf3.citylogistics.building.AbstractBuilding;
@@ -30,6 +31,7 @@ public class CityManager {
 
     public static void tickAllCities(ServerLevel level){
         GlobalCitySavedData data = getCityData(level);
+        CityLogistics.LOGGER.info("Attempting to tick all cities.");
 
         for(City city : data.getCities().values()){
             Collection<AbstractBuilding> allBuildings = city.getBuildings().values();

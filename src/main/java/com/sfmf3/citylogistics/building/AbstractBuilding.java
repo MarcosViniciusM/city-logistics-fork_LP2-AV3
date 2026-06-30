@@ -1,6 +1,7 @@
 package com.sfmf3.citylogistics.building;
 
 import com.mojang.serialization.Codec;
+import com.sfmf3.citylogistics.CityLogistics;
 import com.sfmf3.citylogistics.blueprint.Blueprint;
 import com.sfmf3.citylogistics.blueprint.BlueprintIO;
 import com.sfmf3.citylogistics.building.behavior.IExtraction;
@@ -69,6 +70,7 @@ public abstract class AbstractBuilding {
     }
 
     public void tickConstruction(ServerLevel level, City city){
+        CityLogistics.LOGGER.info("Attempting to tick construction on "+getBuildingID()+", at"+getOrigin());
         if(currentTarget == null) { currentTarget = BlueprintIO.loadFromFile(getBuildingID()+"/"+getPath(), level); }
         if(currentBuildingY == null) { findLowestUnfinishedLayer(level); }
         if(currentBuildingY >= this.currentTarget.getDimensions().getY()) { findLowestUnfinishedLayer(level); }
@@ -80,15 +82,14 @@ public abstract class AbstractBuilding {
 
         if(!layerUnfinished(level, currentBuildingY)){ currentBuildingY++; return; }
         if(CityManager.tryConsumeResource(city, getBuildingCosts())){
+            CityLogistics.LOGGER.info("Fixing layer on "+this.getBuildingID()+", at "+this.getOrigin());
             fixLayer(level, currentBuildingY++);
         }
+        CityLogistics.LOGGER.info("No resources found!");
     }
 
     private void findLowestUnfinishedLayer(Level level){
-        if(this.currentTarget == null){
-            this.currentBuildingY = -1;
-            return;
-        }
+        if(this.currentTarget == null){ throw new CityOperationException("Building should be keeping track of their blueprint by now!"); }
 
         Vec3i dims = this.currentTarget.getDimensions();
         for(int y = 0;y<dims.getY();y++){
