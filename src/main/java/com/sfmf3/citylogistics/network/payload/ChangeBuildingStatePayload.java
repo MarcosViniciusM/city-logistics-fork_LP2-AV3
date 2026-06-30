@@ -11,8 +11,7 @@ import net.minecraft.resources.Identifier;
 
 public record ChangeBuildingStatePayload(
         BlockPos cityAnchor,
-        BlockPos buildingAnchor,
-        BuildingState state
+        BlockPos buildingAnchor
 ) implements CustomPacketPayload {
 
     public static Type<ChangeBuildingStatePayload> TYPE = new Type<>(
@@ -21,7 +20,6 @@ public record ChangeBuildingStatePayload(
     public static final StreamCodec<RegistryFriendlyByteBuf, ChangeBuildingStatePayload> STREAM_CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC, ChangeBuildingStatePayload::cityAnchor,
             BlockPos.STREAM_CODEC, ChangeBuildingStatePayload::buildingAnchor,
-            ByteBufCodecs.fromCodec(BuildingState.CODEC), ChangeBuildingStatePayload::state,
             ChangeBuildingStatePayload::new
     );
 

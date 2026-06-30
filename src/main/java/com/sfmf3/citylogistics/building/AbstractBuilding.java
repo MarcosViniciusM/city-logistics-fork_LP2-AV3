@@ -69,7 +69,7 @@ public abstract class AbstractBuilding {
     }
 
     public void tickConstruction(ServerLevel level, City city){
-        if(currentTarget == null) { currentTarget = BlueprintIO.loadFromFile(getPath(), level); }
+        if(currentTarget == null) { currentTarget = BlueprintIO.loadFromFile(getBuildingID()+"/"+getPath(), level); }
         if(currentBuildingY == null) { findLowestUnfinishedLayer(level); }
         if(currentBuildingY >= this.currentTarget.getDimensions().getY()) { findLowestUnfinishedLayer(level); }
         if(currentBuildingY < 0) {

@@ -17,10 +17,7 @@ import com.sfmf3.citylogistics.camera.client.BlueprintPreview;
 import com.sfmf3.citylogistics.camera.client.CityInfoManager;
 import com.sfmf3.citylogistics.camera.client.ModKeys;
 import com.sfmf3.citylogistics.network.CityOperationException;
-import com.sfmf3.citylogistics.network.payload.AddBuildingPayload;
-import com.sfmf3.citylogistics.network.payload.BlueprintRequestPayload;
-import com.sfmf3.citylogistics.network.payload.BuildingRequestPayload;
-import com.sfmf3.citylogistics.network.payload.BuildingResponsePayload;
+import com.sfmf3.citylogistics.network.payload.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -211,8 +208,25 @@ public class CityScreen extends ModularUIScreen {
             }
         });
 
+        root.select("#add_building").findFirst().ifPresent(widget -> {
+            if(widget instanceof Button button){
+                button.setOnClick(_ -> {
+                    mc.player.connection.send(new ChangeBuildingStatePayload(
+                            CityInfoManager.cityAnchor,
+                            activeSelection.getBox().origin()
+                    ));
+                });
+            }
+        });
 
-
+        root.select("#end_constructor").findFirst().ifPresent(widget -> {
+            if(widget instanceof Button button){
+                button.setOnClick(_ -> {
+                    activeSelection = null;
+                    buildingInfoPlaceholder.clearAllChildren();
+                });
+            }
+        });
 
         buildingInfoPlaceholder.addChild(root);
     }
