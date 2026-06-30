@@ -75,5 +75,11 @@ public class ModNetwork {
                 BuildingResponsePayload.STREAM_CODEC,
                 ClientPayloadHandler::handleBuildingResponse
         );
+
+        registrar.playToServer(
+                ChangeBuildingStatePayload.TYPE,
+                ChangeBuildingStatePayload.STREAM_CODEC,
+                ServerPayloadHandler::handleChangeBuildingState
+        );
     }
 }

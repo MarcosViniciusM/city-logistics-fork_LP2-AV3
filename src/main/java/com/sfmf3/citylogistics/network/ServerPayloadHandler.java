@@ -3,8 +3,10 @@ package com.sfmf3.citylogistics.network;
 import com.sfmf3.citylogistics.CityLogistics;
 import com.sfmf3.citylogistics.blueprint.Blueprint;
 import com.sfmf3.citylogistics.blueprint.BlueprintIO;
+import com.sfmf3.citylogistics.building.AbstractBuilding;
 import com.sfmf3.citylogistics.city.City;
 import com.sfmf3.citylogistics.city.CityManager;
+import com.sfmf3.citylogistics.city.GlobalCitySavedData;
 import com.sfmf3.citylogistics.network.payload.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -143,6 +145,32 @@ public class ServerPayloadHandler {
                 }catch (Exception e){
                     serverPlayer.sendSystemMessage(Component.literal("Error" + e.getMessage()).withStyle(ChatFormatting.DARK_RED));
                     CityLogistics.LOGGER.error("Failed to handle building request for " + serverPlayer.getName());
+                }
+            }
+        });
+    }
+
+    public static void handleChangeBuildingState(final ChangeBuildingStatePayload payload, final IPayloadContext context){
+        context.enqueueWork(() -> {
+            if(context.player() instanceof ServerPlayer serverPlayer){
+                try{
+                    ServerLevel level = serverPlayer.level();
+
+                    AbstractBuilding building = CityManager.getCityData(level)
+                            .getCities().get(payload.cityAnchor())
+                            .getBuildings().get(payload.buildingAnchor());
+
+                    building.setConstruction();
+
+                    // lol
+                    context.reply(CityManager.returnInfo(new BuildingRequestPayload(
+                            payload.cityAnchor(),
+                            payload.buildingAnchor()
+                    ), context, level));
+
+                } catch (Exception e){
+                    serverPlayer.sendSystemMessage(Component.literal("Error" + e.getMessage()).withStyle(ChatFormatting.DARK_RED));
+                    CityLogistics.LOGGER.error("Failed to change building state for " + serverPlayer.getName());
                 }
             }
         });

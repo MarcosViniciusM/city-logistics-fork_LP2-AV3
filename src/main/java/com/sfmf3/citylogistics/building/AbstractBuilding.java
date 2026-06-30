@@ -9,6 +9,7 @@ import com.sfmf3.citylogistics.building.behavior.IProduction;
 import com.sfmf3.citylogistics.building.behavior.IStorage;
 import com.sfmf3.citylogistics.city.City;
 import com.sfmf3.citylogistics.city.CityManager;
+import com.sfmf3.citylogistics.network.CityOperationException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerLevel;
@@ -169,6 +170,16 @@ public abstract class AbstractBuilding {
                 getMirrored(),
                 getBuildingID()
         );
+    }
+
+    // there will be no setters for BuildingState.
+    // instead, we will always set it to UNFINISHED.
+    // if building was blueprint, it will run the construction steps as its supposed to
+    // if building was operational, it will check for any irregularities and run the repairs
+    // smart implementation i think
+    public void setConstruction(){
+        if(this.state == BuildingState.UNFINISHED) throw new CityOperationException("Building already set to unfinished!");
+        this.state = BuildingState.UNFINISHED;
     }
 
     // this is a horrible implementation but whatever

@@ -20,6 +20,7 @@ import com.sfmf3.citylogistics.network.CityOperationException;
 import com.sfmf3.citylogistics.network.payload.AddBuildingPayload;
 import com.sfmf3.citylogistics.network.payload.BlueprintRequestPayload;
 import com.sfmf3.citylogistics.network.payload.BuildingRequestPayload;
+import com.sfmf3.citylogistics.network.payload.BuildingResponsePayload;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -46,6 +47,10 @@ public class CityScreen extends ModularUIScreen {
     public static CityInfoManager.BuildingPlacementContext activeContext = null;
     public static BuildingInformation activeSelection = null;
 
+    private UIElement drawerPlaceholder = null;
+    private UIElement buildingInfoPlaceholder = null;
+    private UIElement groupContainer = null;
+
     public CityScreen(Player player){
         var base = new UIElement(){
             {
@@ -66,11 +71,10 @@ public class CityScreen extends ModularUIScreen {
 
         // remove later
 
-        var categoryPlaceholder = root.select("#building_category").findFirst().orElse(null);
-        var drawerPlaceholder = root.select("#building_selection").findFirst().orElse(null);
-        var buildingInfoPlaceholder = root.select("#building_info").findFirst().orElse(null);
+        drawerPlaceholder = root.select("#building_selection").findFirst().orElse(null);
+        buildingInfoPlaceholder = root.select("#building_info").findFirst().orElse(null);
 
-        var groupContainer = root.select("#category_group").findFirst().orElse(null);
+        groupContainer = root.select("#category_group").findFirst().orElse(null);
 
         // populate building category menu
         for(String cat : BuildingRegistry.CATEGORIES){
@@ -79,7 +83,7 @@ public class CityScreen extends ModularUIScreen {
                 if(widget instanceof Toggle toggleBtn){
 
                     toggleBtn.setOnToggleChanged((isActive) -> {
-                        if(isActive) populateDrawer(drawerPlaceholder, buildingInfoPlaceholder, cat);
+                        if(isActive) populateDrawer(cat);
                         else drawerPlaceholder.clearAllChildren();
                     });
                     var text = toggleBtn.select("#category").findFirst().orElse(null);
@@ -91,8 +95,8 @@ public class CityScreen extends ModularUIScreen {
         }
     }
 
-    private void populateDrawer(UIElement selectionPlaceholder, UIElement infoPlaceholder, String category){
-        selectionPlaceholder.clearAllChildren();
+    private void populateDrawer(String category){
+        drawerPlaceholder.clearAllChildren();
 
         for(BuildingRegistry.BuildingDefinition def : BuildingRegistry.BUILDING_REGISTRY){
             if(def.category().equals(category)){
@@ -109,19 +113,19 @@ public class CityScreen extends ModularUIScreen {
                 itemUi.select("#button").findFirst().ifPresent(widget -> {
                     if(widget instanceof Button button){
                         button.setOnClick(click ->{
-                            populateConstructor(infoPlaceholder, def);
+                            populateConstructor(def);
                         });
                     }
                 });
 
-                selectionPlaceholder.addChild(itemUi);
+                drawerPlaceholder.addChild(itemUi);
             }
         }
-        selectionPlaceholder.markTaffyStyleDirty();
+        drawerPlaceholder.markTaffyStyleDirty();
     }
 
-    private void populateConstructor(UIElement infoPlaceholder, BuildingRegistry.BuildingDefinition def){
-        infoPlaceholder.clearAllChildren();
+    private void populateConstructor(BuildingRegistry.BuildingDefinition def){
+        buildingInfoPlaceholder.clearAllChildren();
 
         activeContext = new CityInfoManager.BuildingPlacementContext(def.buildingId());
         var constructorUi = loadTemplate("layouts/building_constructor_template.ui.nbt");
@@ -174,7 +178,7 @@ public class CityScreen extends ModularUIScreen {
                     ));
 
                     activeContext = null;
-                    infoPlaceholder.clearAllChildren();
+                    buildingInfoPlaceholder.clearAllChildren();
                 });
             }
         });
@@ -183,16 +187,27 @@ public class CityScreen extends ModularUIScreen {
             if(widget instanceof Button button){
                 button.setOnClick(_ -> {
                     activeContext = null;
-                    infoPlaceholder.clearAllChildren();
+                    buildingInfoPlaceholder.clearAllChildren();
                 });
             }
         });
 
-        infoPlaceholder.addChild(root);
+        buildingInfoPlaceholder.addChild(root);
     }
 
-    private void populateViewer(UIElement infoPlaceholder){
+    private void populateViewer(){
+        if(activeSelection == null || buildingInfoPlaceholder == null) return;
 
+        buildingInfoPlaceholder.clearAllChildren();
+
+        var infoUi = loadTemplate("layouts/building_info_template.ui.nbt");
+        var root = infoUi.select("#root").findFirst().orElse(null);
+
+
+
+
+
+        buildingInfoPlaceholder.addChild(root);
     }
 
     @Override
