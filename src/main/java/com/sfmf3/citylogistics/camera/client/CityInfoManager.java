@@ -6,6 +6,8 @@ import com.sfmf3.citylogistics.blueprint.BlueprintRegistry;
 import com.sfmf3.citylogistics.building.BuildingBox;
 import com.sfmf3.citylogistics.building.BuildingInformation;
 import com.sfmf3.citylogistics.building.BuildingState;
+import com.sfmf3.citylogistics.camera.client.ui.CityScreen;
+import com.sfmf3.citylogistics.city.City;
 import com.sfmf3.citylogistics.network.payload.BlueprintResponsePayload;
 import com.sfmf3.citylogistics.network.payload.CityRequestPayload;
 import com.sfmf3.citylogistics.network.payload.CityResponsePayload;
@@ -30,6 +32,8 @@ public class CityInfoManager {
     public static Map<String, Integer> stockLimits = null;
     public static int pop;
     public static int popcap;
+
+
     public static List<BuildingBox> allBuildings = new ArrayList<>();
 
 
@@ -48,6 +52,7 @@ public class CityInfoManager {
         stockCurrent = payload.stockCurrent();
         stockLimits = payload.stockLimits();
         allBuildings = payload.buildings();
+        CityScreen.updateResources();
         BlueprintPreview.setBuildings(true);
     }
 

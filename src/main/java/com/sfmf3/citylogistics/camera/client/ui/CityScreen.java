@@ -40,13 +40,13 @@ import static com.sfmf3.citylogistics.camera.CameraController.mc;
 @EventBusSubscriber(modid = CityLogistics.MODID, value = Dist.CLIENT)
 public class CityScreen extends ModularUIScreen {
 
-    private ModularUI ui;
     public static CityInfoManager.BuildingPlacementContext activeContext = null;
     public static BuildingInformation activeSelection = null;
 
     private UIElement drawerPlaceholder = null;
     private UIElement buildingInfoPlaceholder = null;
     private UIElement groupContainer = null;
+    private UIElement resourcePlaceholder = null;
 
     public CityScreen(Player player){
         var base = new UIElement(){
@@ -61,17 +61,14 @@ public class CityScreen extends ModularUIScreen {
 
     public void createModularUI(UIElement base){
         var root = loadTemplate("layouts/base_screen.ui.nbt");
-
         root.layout(layout -> layout.widthPercent(100).heightPercent(100));
 
         base.addChild(root);
 
-        // remove later
-
         drawerPlaceholder = root.select("#building_selection").findFirst().orElse(null);
         buildingInfoPlaceholder = root.select("#building_info").findFirst().orElse(null);
-
         groupContainer = root.select("#category_group").findFirst().orElse(null);
+        resourcePlaceholder = root.select("#resources").findFirst().orElse(null);
 
         // populate building category menu
         for(String cat : BuildingRegistry.CATEGORIES){
@@ -189,6 +186,7 @@ public class CityScreen extends ModularUIScreen {
             }
         });
 
+        root.addEventListener(UIEvents.MOUSE_DOWN, uiEvent -> {});
         buildingInfoPlaceholder.addChild(root);
     }
 
@@ -228,7 +226,47 @@ public class CityScreen extends ModularUIScreen {
             }
         });
 
+        root.addEventListener(UIEvents.MOUSE_DOWN, uiEvent -> {});
         buildingInfoPlaceholder.addChild(root);
+    }
+
+    private void populateResources(){
+        resourcePlaceholder.clearAllChildren();
+
+        CityInfoManager.stockLimits.forEach((resource, limit) -> {
+            var root = loadTemplate("layouts/resource_bar_template.ui.nbt").select("#root_resource").findFirst().orElse(null);
+            var current = CityInfoManager.stockCurrent.getOrDefault(resource, 0);
+
+            root.select("#resource_progress").findFirst().ifPresent(widget -> {
+                if(widget instanceof ProgressBar bar){
+                    bar.setMaxValue(limit);
+                    bar.setValue((float) current);
+                }
+            });
+
+            root.select("#limit").findFirst().ifPresent(widget ->{
+                if(widget instanceof Label label){
+                    label.setValue(Component.literal(limit.toString()));
+                }
+            });
+
+            root.select("#current").findFirst().ifPresent(widget ->{
+                if(widget instanceof Label label){
+                    label.setValue(Component.literal(current.toString()));
+                }
+            });
+
+            root.select("#resource_name").findFirst().ifPresent(widget ->{
+                if(widget instanceof Label label){
+                    label.setValue(Component.literal(resource));
+                }
+            });
+
+            root.addEventListener(UIEvents.MOUSE_DOWN, uiEvent -> {});
+            resourcePlaceholder.addChild(root);
+
+        });
+
     }
 
     public static void updateSelection(BuildingInformation information) {
@@ -236,6 +274,12 @@ public class CityScreen extends ModularUIScreen {
         if(information == null) return;
         if(mc.screen instanceof CityScreen screen){
             screen.populateViewer();
+        }
+    }
+
+    public static void updateResources(){
+        if(mc.screen instanceof CityScreen screen){
+            screen.populateResources();
         }
     }
 

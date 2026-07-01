@@ -96,7 +96,7 @@ public abstract class AbstractBuilding {
             for(int x = 0;x<dims.getX();x++){
                 for(int z = 0;z<dims.getZ();z++){
                     BlockPos relPos = new BlockPos(x, y, z);
-                    if(checkBlockState(level, mirrored, rotation, relPos)){
+                    if(!checkBlockState(level, mirrored, rotation, relPos)){
                         this.currentBuildingY = y;
                         return;
                     }
@@ -116,7 +116,7 @@ public abstract class AbstractBuilding {
         for(int x = 0;x<dims.getX();x++){
             for(int z = 0;z< dims.getZ();z++){
                 BlockPos relPos = new BlockPos(x, y, z);
-                if(checkBlockState(level, mirrored, rotation, relPos)) return true;
+                if(!checkBlockState(level, mirrored, rotation, relPos)) return true;
             }
         }
         return false;
