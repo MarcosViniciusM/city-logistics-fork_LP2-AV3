@@ -6,7 +6,9 @@ import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
+import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.utils.IModularUIProvider;
 import com.sfmf3.citylogistics.CityLogistics;
@@ -18,6 +20,8 @@ import com.sfmf3.citylogistics.camera.client.CityInfoManager;
 import com.sfmf3.citylogistics.camera.client.ModKeys;
 import com.sfmf3.citylogistics.network.CityOperationException;
 import com.sfmf3.citylogistics.network.payload.*;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -28,12 +32,15 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import org.apache.logging.log4j.core.pattern.AbstractStyleNameConverter;
 import org.lwjgl.glfw.GLFW;
 
 import static com.sfmf3.citylogistics.camera.CameraController.mc;
+import static com.sfmf3.citylogistics.camera.CameraController.orbitPoint;
 
 // sim eu estou implementando uma biblioteca em cima da hora
 // god has cursed me for my hubris, and my work is never finished
@@ -47,6 +54,14 @@ public class CityScreen extends ModularUIScreen {
     private UIElement buildingInfoPlaceholder = null;
     private UIElement groupContainer = null;
     private ScrollerView resourcePlaceholder = null;
+
+    private boolean controlHeld = false;
+
+    @Override
+    public void init(){
+        mc.options.hideGui = true;
+        super.init();
+    }
 
     public CityScreen(Player player){
         var base = new UIElement(){
@@ -195,10 +210,10 @@ public class CityScreen extends ModularUIScreen {
 
         buildingInfoPlaceholder.clearAllChildren();
 
-        //var infoUi = loadTemplate("layouts/building_info_template.ui.nbt");
-        var infoUi = loadTemplate("layouts/building_constructor_template.ui.nbt");
-
+        var infoUi = loadTemplate("layouts/building_viewer_template.ui.nbt");
         var root = infoUi.select("#root").findFirst().orElse(null);
+
+        ScrollerView info = (ScrollerView) root.select("#building_info").findFirst().orElse(null);
 
         root.select("#tooltip_name").findFirst().ifPresent(widget -> {
             if(widget instanceof Label label){
@@ -206,18 +221,15 @@ public class CityScreen extends ModularUIScreen {
             }
         });
 
-        root.select("#add_building").findFirst().ifPresent(widget -> {
+        root.select("#button_view").findFirst().ifPresent(widget -> {
             if(widget instanceof Button button){
                 button.setOnClick(_ -> {
-                    mc.player.connection.send(new ChangeBuildingStatePayload(
-                            CityInfoManager.cityAnchor,
-                            activeSelection.getBox().origin()
-                    ));
+                    orbitPoint(activeSelection.box.origin().getCenter());
                 });
             }
         });
 
-        root.select("#end_constructor").findFirst().ifPresent(widget -> {
+        root.select("#end_viewer").findFirst().ifPresent(widget -> {
             if(widget instanceof Button button){
                 button.setOnClick(_ -> {
                     activeSelection = null;
@@ -225,6 +237,240 @@ public class CityScreen extends ModularUIScreen {
                 });
             }
         });
+
+        root.select("#button_repair").findFirst().ifPresent(widget -> {
+            if(widget instanceof Button button){
+                button.setOnClick(_ -> {
+                    mc.player.connection.send(new ChangeBuildingStatePayload(
+                            CityInfoManager.cityAnchor,
+                            activeSelection.getBox().origin()
+                    ));
+                });
+                button.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
+                    e.hoverTooltips = HoverTooltips.empty()
+                            .append(Component.literal("Sets building to UNFINISHED."));
+                });
+            }
+        });
+
+        root.select("#button_delete").findFirst().ifPresent(widget -> {
+            if(widget instanceof Button button){
+                button.setOnClick(_ -> {
+                    // mc.player.connection.send(); delete command not implemented
+                });
+
+                button.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
+                    e.hoverTooltips = HoverTooltips.empty()
+                            .append(Component.literal("Deletes building."));
+                });
+            }
+        });
+
+        if(activeSelection != null){
+            var buildingInfo = loadTemplate("layouts/building_info_template.ui.nbt").select("#root").findFirst().orElse(null);
+            var infoGroup = buildingInfo.select("#info").findFirst().orElse(null);
+            infoGroup.setDisplay(false);
+
+            buildingInfo.select("#expander").findFirst().ifPresent(widget -> {
+                if(widget instanceof Toggle toggle){
+                    toggle.setValue(false);
+                    toggle.setOnToggleChanged(state -> {
+                        infoGroup.setDisplay(state);
+                        buildingInfo.markTaffyStyleDirty();
+                    });
+                }
+            });
+
+            buildingInfo.select("#name").findFirst().ifPresent(widget -> {
+                if(widget instanceof Label label){
+                    label.setValue(Component.literal("Building information"));
+                }
+            });
+
+            var id = new Label().setValue(Component.literal("ID: " + activeSelection.buildingId));
+            id.textStyle(style -> style.fontSize(5)
+                    .textAlignVertical(Vertical.CENTER));
+            infoGroup.addChild(id);
+
+            var state = new Label().setValue(Component.literal("State: " + activeSelection.state.getSerializedName()));
+            state.textStyle(style -> style.fontSize(5)
+                    .textAlignVertical(Vertical.CENTER));
+            infoGroup.addChild(state);
+
+
+
+            info.addScrollViewChild(buildingInfo);
+        }
+
+        if(activeSelection.housing != 0){
+            var buildingInfo = loadTemplate("layouts/building_info_template.ui.nbt").select("#root").findFirst().orElse(null);
+            var infoGroup = buildingInfo.select("#info").findFirst().orElse(null);
+            infoGroup.setDisplay(false);
+
+            buildingInfo.select("#expander").findFirst().ifPresent(widget -> {
+                if(widget instanceof Toggle toggle){
+                    toggle.setValue(false);
+                    toggle.setOnToggleChanged(state -> {
+                        infoGroup.setDisplay(state);
+                        buildingInfo.markTaffyStyleDirty();
+                    });
+                }
+            });
+
+            buildingInfo.select("#name").findFirst().ifPresent(widget -> {
+                if(widget instanceof Label label){
+                    label.setValue(Component.literal("Housing"));
+                }
+            });
+
+            var slots = new Label().setValue(Component.literal("Houses " + activeSelection.housing + " people"));
+            slots.textStyle(style -> style.fontSize(5)
+                    .textAlignVertical(Vertical.CENTER));
+            infoGroup.addChild(slots);
+
+
+            info.addScrollViewChild(buildingInfo);
+        }
+
+        if(activeSelection.workers != 0){
+            var buildingInfo = loadTemplate("layouts/building_info_template.ui.nbt").select("#root").findFirst().orElse(null);
+            var infoGroup = buildingInfo.select("#info").findFirst().orElse(null);
+            infoGroup.setDisplay(false);
+
+            buildingInfo.select("#expander").findFirst().ifPresent(widget -> {
+                if(widget instanceof Toggle toggle){
+                    toggle.setValue(false);
+                    toggle.setOnToggleChanged(state -> {
+                        infoGroup.setDisplay(state);
+                        buildingInfo.markTaffyStyleDirty();
+                    });
+                }
+            });
+
+            buildingInfo.select("#name").findFirst().ifPresent(widget -> {
+                if(widget instanceof Label label){
+                    label.setValue(Component.literal("Workers"));
+                }
+            });
+
+            var slots = new Label().setValue(Component.literal(activeSelection.workers + " max slots"));
+            slots.textStyle(style -> style.fontSize(5)
+                    .textAlignVertical(Vertical.CENTER));
+            infoGroup.addChild(slots);
+
+
+            info.addScrollViewChild(buildingInfo);
+        }
+
+        if(!activeSelection.output.isEmpty()){
+            var buildingInfo = loadTemplate("layouts/building_info_template.ui.nbt").select("#root").findFirst().orElse(null);
+            var infoGroup = buildingInfo.select("#info").findFirst().orElse(null);
+            infoGroup.setDisplay(false);
+
+            buildingInfo.select("#expander").findFirst().ifPresent(widget -> {
+                if(widget instanceof Toggle toggle){
+                    toggle.setValue(false);
+                    toggle.setOnToggleChanged(state -> {
+                        infoGroup.setDisplay(state);
+                        buildingInfo.markTaffyStyleDirty();
+                    });
+                }
+            });
+
+            buildingInfo.select("#name").findFirst().ifPresent(widget -> {
+                if(widget instanceof Label label){
+                    label.setValue(Component.literal("Output"));
+                }
+            });
+
+            var max = new Label().setValue(Component.literal("Max output at full workers/2h "));
+            max.textStyle(style -> style.fontSize(4.5f)
+                    .textAlignVertical(Vertical.CENTER));
+            infoGroup.addChild(max);
+
+            activeSelection.output.forEach((resource, amount) -> {
+                var output = new Label().setValue(Component.literal(amount.toString() + " " + resource));
+                output.textStyle(style -> style.fontSize(4)
+                        .textAlignVertical(Vertical.CENTER));
+                infoGroup.addChild(output);
+            });
+
+
+            info.addScrollViewChild(buildingInfo);
+        }
+
+        if(!activeSelection.input.isEmpty()){
+            var buildingInfo = loadTemplate("layouts/building_info_template.ui.nbt").select("#root").findFirst().orElse(null);
+            var infoGroup = buildingInfo.select("#info").findFirst().orElse(null);
+            infoGroup.setDisplay(false);
+
+            buildingInfo.select("#expander").findFirst().ifPresent(widget -> {
+                if(widget instanceof Toggle toggle){
+                    toggle.setValue(false);
+                    toggle.setOnToggleChanged(state -> {
+                        infoGroup.setDisplay(state);
+                        buildingInfo.markTaffyStyleDirty();
+                    });
+                }
+            });
+
+            buildingInfo.select("#name").findFirst().ifPresent(widget -> {
+                if(widget instanceof Label label){
+                    label.setValue(Component.literal("Input"));
+                }
+            });
+
+            var max = new Label().setValue(Component.literal("Max input at full workers/2h: "));
+            max.textStyle(style -> style.fontSize(4.5f)
+                    .textAlignVertical(Vertical.CENTER));
+            infoGroup.addChild(max);
+
+            activeSelection.input.forEach((resource, amount) -> {
+                var input = new Label().setValue(Component.literal(amount.toString() + " " + resource));
+                input.textStyle(style -> style.fontSize(4)
+                        .textAlignVertical(Vertical.CENTER));
+                infoGroup.addChild(input);
+            });
+
+            info.addScrollViewChild(buildingInfo);
+        }
+
+        if(!activeSelection.storage.isEmpty()){
+            var buildingInfo = loadTemplate("layouts/building_info_template.ui.nbt").select("#root").findFirst().orElse(null);
+            var infoGroup = buildingInfo.select("#info").findFirst().orElse(null);
+            infoGroup.setDisplay(false);
+
+            buildingInfo.select("#expander").findFirst().ifPresent(widget -> {
+                if(widget instanceof Toggle toggle){
+                    toggle.setValue(false);
+                    toggle.setOnToggleChanged(state -> {
+                        infoGroup.setDisplay(state);
+                        buildingInfo.markTaffyStyleDirty();
+                    });
+                }
+            });
+
+            buildingInfo.select("#name").findFirst().ifPresent(widget -> {
+                if(widget instanceof Label label){
+                    label.setValue(Component.literal("Storage"));
+                }
+            });
+
+            var max = new Label().setValue(Component.literal("Max storage: "));
+            max.textStyle(style -> style.fontSize(4.5f)
+                    .textAlignVertical(Vertical.CENTER));
+            infoGroup.addChild(max);
+
+            activeSelection.storage.forEach((resource, amount) -> {
+                var storage = new Label().setValue(Component.literal(amount.toString() + " " + resource));
+                storage.textStyle(style -> style.fontSize(4)
+                        .textAlignVertical(Vertical.CENTER));
+                infoGroup.addChild(storage);
+            });
+
+            info.addScrollViewChild(buildingInfo);
+        }
+
 
         root.addEventListener(UIEvents.MOUSE_DOWN, uiEvent -> {});
         buildingInfoPlaceholder.addChild(root);
@@ -343,6 +589,19 @@ public class CityScreen extends ModularUIScreen {
     public boolean mouseScrolled(double x, double y, double scrollX, double scrollY){
         if (super.mouseScrolled(x, y, scrollX, scrollY)) { return true; }
 
+        if(activeContext != null){
+            if(controlHeld){
+                if(scrollY > 0){
+                    activeContext.selectedBlock = activeContext.selectedBlock.above();
+                    return true;
+                }
+                if(scrollY < 0){
+                    activeContext.selectedBlock = activeContext.selectedBlock.below();
+                    return true;
+                }
+            }
+        }
+
         if(CameraController.isAnchorActive()){
             CameraController.getAnchor().handleZoom(scrollY);
             return true;
@@ -387,8 +646,31 @@ public class CityScreen extends ModularUIScreen {
             CameraController.toggle();
             return true;
         }
+        if(event.key() == GLFW.GLFW_KEY_LEFT_CONTROL){
+            controlHeld = true;
+            return true;
+        }
 
         return false;
+    }
+
+    @Override
+    public boolean keyReleased(KeyEvent event){
+
+        if(event.key() == GLFW.GLFW_KEY_LEFT_CONTROL){
+            controlHeld = false;
+            return true;
+        }
+
+        if(super.keyReleased(event)) { return true; }
+
+        return false;
+    }
+
+    @Override
+    public void removed(){
+        mc.options.hideGui = false;
+        super.removed();
     }
 
     @Override

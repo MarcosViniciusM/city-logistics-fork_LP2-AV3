@@ -34,7 +34,7 @@ public class Outpost extends AbstractBuilding implements IHousing, IExtraction, 
         this.workerCapacity = calculateCapacity(dimensions, 5, 0.5);
         this.housingCapacity = calculateCapacity(dimensions, 10, 1);
         this.storageCapacity = calculateCapacity(dimensions, 50, 5);
-        this.extractionRate = 0.15;
+        this.extractionRate = 1;
         this.extractedResource = "food";
     }
 
@@ -43,7 +43,7 @@ public class Outpost extends AbstractBuilding implements IHousing, IExtraction, 
         this.workerCapacity = workerCapacity;
         this.housingCapacity = housingCapacity;
         this.storageCapacity = storageCapacity;
-        this.extractionRate = 0.15;
+        this.extractionRate = 1;
         this.extractedResource = "food";
     }
 

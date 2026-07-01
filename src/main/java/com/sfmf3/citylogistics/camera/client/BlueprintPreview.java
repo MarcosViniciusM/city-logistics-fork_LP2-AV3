@@ -60,6 +60,14 @@ public class BlueprintPreview {
 
                 handlePositioning(poseStack, camPos, box.origin(), box.rotation(), box.mirrored());
 
+                int color;
+                switch (box.state()){
+                    case BLUEPRINT -> color = 0xFF0000AA;
+                    case UNFINISHED -> color = 0xFF555555;
+                    case OPERATIONAL -> color = 0xFFFFFFFF;
+                    case null, default -> color = 0xFF101010;
+                }
+
                 // render block origin
                 ShapeRenderer.renderShape(poseStack, buffer, cube, 0, 0, 0, 0xFFFFFFFF, 1.0f);
                 // render building box
@@ -70,7 +78,7 @@ public class BlueprintPreview {
                                 box.dimensions().getY(),
                                 box.dimensions().getZ()
                         ), 0, 0, 0,
-                        0xFFFFFFFF, 5.0F
+                        color, 5.0F
                 );
                 poseStack.popPose();
             }

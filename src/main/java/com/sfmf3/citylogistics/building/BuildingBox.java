@@ -15,13 +15,15 @@ public record BuildingBox(
         Vec3i dimensions,
         Rotation rotation,
         boolean mirrored,
-        String buildingId) {
+        String buildingId,
+        BuildingState state) {
     public static final StreamCodec<RegistryFriendlyByteBuf, BuildingBox> STREAM_CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC, BuildingBox::origin,
             Vec3i.STREAM_CODEC, BuildingBox::dimensions,
             Rotation.STREAM_CODEC, BuildingBox::rotation,
             ByteBufCodecs.BOOL, BuildingBox::mirrored,
             ByteBufCodecs.STRING_UTF8, BuildingBox::buildingId,
+            ByteBufCodecs.fromCodec(BuildingState.CODEC), BuildingBox::state,
             BuildingBox::new
     );
     public static final StreamCodec<RegistryFriendlyByteBuf, List<BuildingBox>> LIST_CODEC =

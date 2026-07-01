@@ -21,14 +21,14 @@ public class Mine extends AbstractBuilding implements IExtraction {
     public Mine(ServerLevel level, BlockPos origin, Vec3i dimensions, String path, Rotation rot, boolean mirror) {
         super(level, origin, dimensions, path, rot, mirror);
         this.workerCapacity = calculateCapacity(dimensions, 30, 0.5);
-        this.extractionRate = 0.15;
+        this.extractionRate = 1;
         this.extractedResource = "stone";
     }
 
     protected Mine(String path, BlockPos origin, Vec3i dimensions, BuildingState state, Rotation rot, boolean mirror, int workerCapacity) {
         super(origin, dimensions, path, state, rot, mirror);
         this.workerCapacity = workerCapacity;
-        this.extractionRate = 0.15;
+        this.extractionRate = 1;
         this.extractedResource = "stone";
     }
 

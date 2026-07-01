@@ -174,7 +174,8 @@ public abstract class AbstractBuilding {
                 getDimensions(),
                 getRotation(),
                 getMirrored(),
-                getBuildingID()
+                getBuildingID(),
+                getState()
         );
     }
 
@@ -195,24 +196,23 @@ public abstract class AbstractBuilding {
         info.buildingId = this.getBuildingID();
         info.state = this.state;
 
-        if(this instanceof IExtraction){
-            info.input.put(
-                    ((IExtraction) this).getExtractedResource(),
-                    (int) (((IExtraction) this).getExtractionWorkerRate() * ((IExtraction) this).getExtractionWorkerCapacity())
-            );
-            info.workers += ((IExtraction) this).getExtractionWorkerCapacity();
+        if(this instanceof IExtraction extraction){
+            info.output.put(
+                    extraction.getExtractedResource(),
+                    (int) extraction.getExtractionWorkerRate() * extraction.getExtractionWorkerCapacity());
+            info.workers += extraction.getExtractionWorkerCapacity();
         }
-        if(this instanceof IProduction){
-            info.input.putAll(((IProduction) this).getProducedMaterials());
-            info.workers += ((IProduction) this).getProductionWorkerCapacity();
+        if(this instanceof IProduction production){
+            info.output.putAll(production.getProducedMaterials());
+            info.workers += production.getProductionWorkerCapacity();
         }
         if(this instanceof IStorage storage){
             for(String resource : storage.getAllowedResources()){
                 info.storage.put(resource, storage.getMaxStorage());
             }
         }
-        if(this instanceof IHousing){
-            info.housing += ((IHousing) this).getHousingCapacity();
+        if(this instanceof IHousing housing){
+            info.housing += housing.getHousingCapacity();
         }
 
         return info;

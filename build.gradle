@@ -124,6 +124,7 @@ configurations {
 
 dependencies {
     implementation "maven.modrinth:B1CBVXHX:mPEEJmt5"
+    compileOnly "dev.vfyjxf:taffy:1.1.4"
 
 }
 

@@ -56,7 +56,7 @@ public class Lumbermill extends AbstractBuilding implements IExtraction {
 
     @Override
     public double getExtractionWorkerRate() {
-        return 0.15;
+        return 1;
     }
 
     @Override

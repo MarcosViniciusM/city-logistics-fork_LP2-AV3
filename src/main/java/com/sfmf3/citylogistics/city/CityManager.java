@@ -326,7 +326,8 @@ public class CityManager {
                     b.getDimensions(),
                     b.getRotation(),
                     b.getMirrored(),
-                    b.getBuildingID()
+                    b.getBuildingID(),
+                    b.getState()
             ));
         }
         return new CityResponsePayload(
