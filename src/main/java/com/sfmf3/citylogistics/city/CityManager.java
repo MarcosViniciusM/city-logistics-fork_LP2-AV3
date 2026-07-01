@@ -10,6 +10,7 @@ import com.sfmf3.citylogistics.building.BuildingState;
 import com.sfmf3.citylogistics.building.behavior.IExtraction;
 import com.sfmf3.citylogistics.building.behavior.IHousing;
 import com.sfmf3.citylogistics.building.behavior.IProduction;
+import com.sfmf3.citylogistics.building.behavior.IStorage;
 import com.sfmf3.citylogistics.network.CityOperationException;
 import com.sfmf3.citylogistics.network.payload.BuildingRequestPayload;
 import com.sfmf3.citylogistics.network.payload.BuildingResponsePayload;
@@ -40,6 +41,7 @@ public class CityManager {
             List<AbstractBuilding> production = new ArrayList<>();
             List<AbstractBuilding> unfinished = new ArrayList<>();
 
+            Map<String, Integer> totalStorage = new HashMap<>();
             int totalHousingCapacity = 0;
             int totalExtractionWorkers = 0;
             int totalProductionWorkers = 0;
@@ -60,12 +62,17 @@ public class CityManager {
                     if(building instanceof IHousing housing){
                         totalHousingCapacity += housing.getHousingCapacity();
                     }
+
+                    if(building instanceof IStorage storage){
+                        storage.getAllowedResources().forEach(resource -> totalStorage.merge(resource, storage.getMaxStorage(), Integer::sum));
+                    }
                 } else if (building.getState() == BuildingState.UNFINISHED) {
                     unfinished.add(building);
                 }
             }
             // quick update
             if(city.getPopulationCap() != totalHousingCapacity){city.setPopulationCap(totalHousingCapacity);}
+            city.setStockpileMax(totalStorage);
 
             // lets civilians go if not enough housing or food
             handleCivilianUpkeep(city);
@@ -100,7 +107,7 @@ public class CityManager {
                         building.getMirrored());
                 BlockPos minPos = BlockPos.containing(box.minX, box.minY, box.minZ);
                 BlockPos maxPos = BlockPos.containing(box.maxX, box.maxY, box.maxZ);
-                if(!level.hasChunksAt(minPos, maxPos)) return;
+                if(!level.hasChunksAt(minPos, maxPos)) continue;
                 building.tickConstruction(level, city);
             }
 

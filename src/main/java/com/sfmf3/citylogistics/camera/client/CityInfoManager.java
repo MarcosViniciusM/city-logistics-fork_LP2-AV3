@@ -52,6 +52,9 @@ public class CityInfoManager {
         stockCurrent = payload.stockCurrent();
         stockLimits = payload.stockLimits();
         allBuildings = payload.buildings();
+
+        CityLogistics.LOGGER.info(stockCurrent.toString());
+        CityLogistics.LOGGER.info(stockLimits.toString());
         CityScreen.updateResources();
         BlueprintPreview.setBuildings(true);
     }

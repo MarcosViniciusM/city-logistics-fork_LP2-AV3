@@ -77,15 +77,16 @@ public abstract class AbstractBuilding {
         if(currentBuildingY < 0) {
             setState(BuildingState.OPERATIONAL);
             cleanupConstructionVariables();
+            CityLogistics.LOGGER.info("Setting building " + this.getOrigin() + "as operational.");
             return;
         }
 
         if(!layerUnfinished(level, currentBuildingY)){ currentBuildingY++; return; }
         if(CityManager.tryConsumeResource(city, getBuildingCosts())){
-            CityLogistics.LOGGER.info("Fixing layer on "+this.getBuildingID()+", at "+this.getOrigin());
+            CityLogistics.LOGGER.info("Fixing layer "+ currentBuildingY + "on "+this.getBuildingID()+", at "+this.getOrigin());
             fixLayer(level, currentBuildingY++);
         }
-        CityLogistics.LOGGER.info("No resources found!");
+        else CityLogistics.LOGGER.info("No resources found!");
     }
 
     private void findLowestUnfinishedLayer(Level level){
@@ -155,6 +156,10 @@ public abstract class AbstractBuilding {
                 .mirror(mirrorEnum)
                 .rotate(level, pos, rotation);
 
+
+        if(!actual.equals(expected)){
+            CityLogistics.LOGGER.info("Found mismatch at " + worldPos+", found "+actual+" instead of "+expected);
+        }
         return actual.equals(expected);
     }
 

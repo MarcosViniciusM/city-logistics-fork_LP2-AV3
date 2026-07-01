@@ -82,6 +82,7 @@ public class City {
     public BlockPos getAnchor(){return anchor;}
     public List<UUID> getEditors() {return editors;}
     public Map<String, Integer> getStockpileMax() {return stockpileMax;}
+    public void setStockpileMax(Map<String, Integer> max) {stockpileMax = max;}
     public Map<String, Integer> getStockpileCurrent() {return stockpileCurrent;}
     public Map<BlockPos, AbstractBuilding> getBuildings() {return buildings;}
     public int getPopulation() { return population; }

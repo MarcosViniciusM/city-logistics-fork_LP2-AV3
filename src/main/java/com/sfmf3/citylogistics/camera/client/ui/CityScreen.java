@@ -46,7 +46,7 @@ public class CityScreen extends ModularUIScreen {
     private UIElement drawerPlaceholder = null;
     private UIElement buildingInfoPlaceholder = null;
     private UIElement groupContainer = null;
-    private UIElement resourcePlaceholder = null;
+    private ScrollerView resourcePlaceholder = null;
 
     public CityScreen(Player player){
         var base = new UIElement(){
@@ -68,7 +68,7 @@ public class CityScreen extends ModularUIScreen {
         drawerPlaceholder = root.select("#building_selection").findFirst().orElse(null);
         buildingInfoPlaceholder = root.select("#building_info").findFirst().orElse(null);
         groupContainer = root.select("#category_group").findFirst().orElse(null);
-        resourcePlaceholder = root.select("#resources").findFirst().orElse(null);
+        resourcePlaceholder = (ScrollerView) root.select("#resources").findFirst().orElse(null);
 
         // populate building category menu
         for(String cat : BuildingRegistry.CATEGORIES){
@@ -231,7 +231,7 @@ public class CityScreen extends ModularUIScreen {
     }
 
     private void populateResources(){
-        resourcePlaceholder.clearAllChildren();
+        resourcePlaceholder.clearAllScrollViewChildren();
 
         CityInfoManager.stockLimits.forEach((resource, limit) -> {
             var root = loadTemplate("layouts/resource_bar_template.ui.nbt").select("#root_resource").findFirst().orElse(null);
@@ -263,7 +263,7 @@ public class CityScreen extends ModularUIScreen {
             });
 
             root.addEventListener(UIEvents.MOUSE_DOWN, uiEvent -> {});
-            resourcePlaceholder.addChild(root);
+            resourcePlaceholder.addScrollViewChild(root);
 
         });
 
