@@ -54,6 +54,7 @@ public class CityScreen extends ModularUIScreen {
     private UIElement buildingInfoPlaceholder = null;
     private UIElement groupContainer = null;
     private ScrollerView resourcePlaceholder = null;
+    private UIElement cityFunctions = null;
 
     private boolean controlHeld = false;
 
@@ -84,6 +85,8 @@ public class CityScreen extends ModularUIScreen {
         buildingInfoPlaceholder = root.select("#building_info").findFirst().orElse(null);
         groupContainer = root.select("#category_group").findFirst().orElse(null);
         resourcePlaceholder = (ScrollerView) root.select("#resources").findFirst().orElse(null);
+        cityFunctions = root.select("#city_functions").findFirst().orElse(null);
+        cityFunctions.setDisplay(false);
 
         // populate building category menu
         for(String cat : BuildingRegistry.CATEGORIES){
@@ -102,6 +105,35 @@ public class CityScreen extends ModularUIScreen {
             });
 
         }
+
+        var addCity = cityFunctions.select("#add_city").findFirst().orElse(null);
+
+        Toggle expander = (Toggle) root.select("#city_expander").findFirst().orElse(null);
+        expander.setValue(false);
+        expander.setOnToggleChanged(state -> {
+            cityFunctions.setDisplay(state);
+            root.markTaffyStyleDirty();
+        });
+
+        if(CityInfoManager.cityAnchor == null) {
+            TextField text = (TextField) addCity.select("#text_city").findFirst().orElse(null);
+
+            addCity.select("#button_add_city").findFirst().ifPresent(widget -> {
+                if (widget instanceof Button button) {
+                    button.setOnClick(_ -> mc.player.connection.send(new AddCityPayload(mc.player.blockPosition(), text.getText())));
+                }
+            });
+            addCity.select("#button_add_pop").findFirst().ifPresent(widget -> {
+                if (widget instanceof Button button) {
+                    button.setOnClick(_ -> mc.player.connection.send(new AddPopulationPayload(CityInfoManager.cityAnchor, 1)));
+                }
+            });
+
+            addCity.setDisplay(true);
+            root.markTaffyStyleDirty();
+        }
+
+
     }
 
     private void populateDrawer(String category){
@@ -479,6 +511,41 @@ public class CityScreen extends ModularUIScreen {
     private void populateResources(){
         resourcePlaceholder.clearAllScrollViewChildren();
 
+        if(CityInfoManager.popcap != 0){
+            var root = loadTemplate("layouts/resource_bar_template.ui.nbt").select("#root_resource").findFirst().orElse(null);
+            var limit = CityInfoManager.popcap;
+            var current = CityInfoManager.pop;
+
+            root.select("#resource_progress").findFirst().ifPresent(widget -> {
+                if(widget instanceof ProgressBar bar){
+                    bar.setMaxValue(limit);
+                    bar.setValue((float) current);
+                }
+            });
+
+            root.select("#limit").findFirst().ifPresent(widget ->{
+                if(widget instanceof Label label){
+                    label.setValue(Component.literal(String.valueOf(limit)));
+                }
+            });
+
+            root.select("#current").findFirst().ifPresent(widget ->{
+                if(widget instanceof Label label){
+                    label.setValue(Component.literal(String.valueOf(current)));
+                }
+            });
+
+            root.select("#resource_name").findFirst().ifPresent(widget ->{
+                if(widget instanceof Label label){
+                    label.setValue(Component.literal("Population"));
+                }
+            });
+
+            root.addEventListener(UIEvents.MOUSE_DOWN, uiEvent -> {});
+            resourcePlaceholder.addScrollViewChild(root);
+
+        };
+
         CityInfoManager.stockLimits.forEach((resource, limit) -> {
             var root = loadTemplate("layouts/resource_bar_template.ui.nbt").select("#root_resource").findFirst().orElse(null);
             var current = CityInfoManager.stockCurrent.getOrDefault(resource, 0);
@@ -526,6 +593,7 @@ public class CityScreen extends ModularUIScreen {
     public static void updateResources(){
         if(mc.screen instanceof CityScreen screen){
             screen.populateResources();
+            screen.cityFunctions.markTaffyStyleDirty();
         }
     }
 

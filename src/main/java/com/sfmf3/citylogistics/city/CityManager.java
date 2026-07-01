@@ -219,7 +219,8 @@ public class CityManager {
 
     public static void addPopulation(City city, int count){
         int pop = city.getPopulation();
-        int requiredFood = (int) ((pop * pop) / ((pop * 4) + 1));
+        //int requiredFood = (int) ((pop * pop) / ((pop * 4) + 1));
+        int requiredFood = 0; // debug for now
 
         for(int x = 0; x < count; x++){
             if(tryConsumeResource(city, "food", requiredFood)){city.setPopulation(city.getPopulation() + 1);}
